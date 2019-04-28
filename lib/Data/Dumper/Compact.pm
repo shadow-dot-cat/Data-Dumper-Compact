@@ -48,16 +48,18 @@ sub _format_array {
 
 sub _format_hash {
   my ($self, $f) = @_;
+  my %k = (map +(
+    $_ => ($_ =~ /^-?[a-zA-Z]\w+$/
+      ? $_
+        # stick a space on the front to force dumping of e.g. 123, then strip it
+      : do { (my $s = Dumper(" $_")) =~ s/^" /"/; $s }
+    )), keys %$f
+  );
   join("\n",
     '{',
     (map {
       my ($key, $value) = ($_, $f->{$_});
-      my $key_s = ($key =~ /^-?[a-zA-Z]\w+$/
-        ? $key
-          # stick a space on the front to force dumping of e.g. 123, then strip it
-        : do { (my $s = Dumper(" ${key}")) =~ s/^" /"/; $s }
-      );
-      (my $s = "${key_s} => ".$self->_format($value).',') =~ s/^/  /msg;
+      (my $s = "$k{$key} => ".$self->_format($value).',') =~ s/^/  /msg;
       $s;
     } sort keys %$f),
     '}',
