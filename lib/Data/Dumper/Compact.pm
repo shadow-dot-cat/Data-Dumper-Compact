@@ -58,7 +58,7 @@ sub _format_hash {
           # stick a space on the front to force dumping of e.g. 123, then strip it
         : do { (my $s = Dumper(" ${key}")) =~ s/^" /"/; $s }
       );
-      (my $s = "${key_s} => ".$self->_format($value)) =~ s/^/  /msg;
+      (my $s = "${key_s} => ".$self->_format($value).',') =~ s/^/  /msg;
       $s;
     } @pairs),
     '}',
