@@ -12,7 +12,7 @@ sub dump {
 sub render {
   my ($self, $r) = @_;
   if (ref($r) eq 'HASH') {
-    return [ hash => [ map +($_ => $self->render($r->{$_})), sort keys %$r ] ];
+    return [ hash => { map +($_ => $self->render($r->{$_})), keys %$r } ];
   } elsif (ref($r) eq 'ARRAY') {
     return [ array => [ map $self->render($_), @$r ] ];
   }
@@ -47,12 +47,11 @@ sub _format_array {
 }
 
 sub _format_hash {
-  my ($self, $payload) = @_;
-  my @pairs = map [ @{$payload}[$_*2,$_*2+1] ], 0..$#{$payload}/2;
+  my ($self, $f) = @_;
   join("\n",
     '{',
     (map {
-      my ($key, $value) = @$_;
+      my ($key, $value) = ($_, $f->{$_});
       my $key_s = ($key =~ /^-?[a-zA-Z]\w+$/
         ? $key
           # stick a space on the front to force dumping of e.g. 123, then strip it
@@ -60,7 +59,7 @@ sub _format_hash {
       );
       (my $s = "${key_s} => ".$self->_format($value).',') =~ s/^/  /msg;
       $s;
-    } @pairs),
+    } sort keys %$f),
     '}',
   );
 }
