@@ -52,7 +52,7 @@ sub _format_hash {
     $_ => ($_ =~ /^-?[a-zA-Z]\w+$/
       ? $_
         # stick a space on the front to force dumping of e.g. 123, then strip it
-      : do { (my $s = Dumper(" $_")) =~ s/^" /"/; $s }
+      : do { s/^" /"/, s/\n\Z// for my $s = Dumper(" $_"); $s }
     )), keys %$f
   );
   join("\n",
