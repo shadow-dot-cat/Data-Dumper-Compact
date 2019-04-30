@@ -60,9 +60,10 @@ sub _format_array {
   }
   local $self->{width} = $self->{width} - 2;
   if (@$payload == 1) {
-    my @lines = split /\n/, $self->_format($payload->[0]);
-    my ($first, $last) = (shift @lines, pop @lines);
-    return join("\n", '[ '.$first, (map "  $_", @lines), $last.' ]');
+    my ($first, @lines) = split /\n/, $self->_format($payload->[0]);
+    return join("\n", '[', "  $lines[0]", ']') if @lines == 1;
+    my $last = $lines[-1] =~ /^ / ? '' : (pop @lines).' ';
+    return join("\n", '[ '.$first, (map "  $_", @lines), $last.']');
   }
   my @lines;
   my @bits;
@@ -122,9 +123,10 @@ sub _format_hash {
         }
   } keys %$payload;
   if (@f == 1) {
-    my @lines = split /\n/, $f[0];
-    my ($first, $last) = (shift @lines, pop @lines);
-    return join("\n", '{ '.$first, (map "  $_", @lines), $last.' }');
+    my ($first, @lines) = split /\n/, $f[0];
+    return join("\n", '{', "  $first", '}') unless @lines;
+    my $last = $lines[-1] =~ /^ / ? '' : (pop @lines).' ';
+    return join("\n", '{ '.$first, (map "  $_", @lines), $last.'}');
   }
   join("\n",
     '{',
