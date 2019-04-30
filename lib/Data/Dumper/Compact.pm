@@ -62,7 +62,7 @@ sub _format_array {
   if (@$payload == 1) {
     my ($first, @lines) = split /\n/, $self->_format($payload->[0]);
     return join("\n", '[', "  $lines[0]", ']') if @lines == 1;
-    my $last = $lines[-1] =~ /^ / ? '' : (pop @lines).' ';
+    my $last = $lines[-1] =~ /^[\}\]]$/ ? (pop @lines).' ': '';
     return join("\n", '[ '.$first, (map "  $_", @lines), $last.']');
   }
   my @lines;
@@ -125,7 +125,7 @@ sub _format_hash {
   if (@f == 1) {
     my ($first, @lines) = split /\n/, $f[0];
     return join("\n", '{', "  $first", '}') unless @lines;
-    my $last = $lines[-1] =~ /^ / ? '' : (pop @lines).' ';
+    my $last = $lines[-1] =~ /^[\}\]]$/ ? (pop @lines).' ': '';
     return join("\n", '{ '.$first, (map "  $_", @lines), $last.'}');
   }
   join("\n",
