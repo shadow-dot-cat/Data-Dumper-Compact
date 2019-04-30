@@ -97,16 +97,19 @@ sub _format_array {
 sub _format_hash {
   my ($self, $payload) = @_;
   my %k = (map +(
-    $_ => ($_ =~ /^-?[a-zA-Z]\w+$/
+    $_ => ($_ =~ /^-?[a-zA-Z_]\w*$/
       ? $_
         # stick a space on the front to force dumping of e.g. 123, then strip it
-      : do { s/^" /"/, s/\n\Z// for my $s = Dumper(" $_"); $s }
+      : do {
+           s/^" //, s/"\n\Z// for my $s = Dumper(" $_");
+           $self->_format_string($s)
+        }
     ).' =>'), keys %$payload
   );
   my $oneline = do {
     local $self->{oneline} = 1;
     join(' ', '{', join(', ',
-      map $k{$_}.' '.$self->_format($payload->{$_}), keys %$payload
+      map $k{$_}.' '.$self->_format($payload->{$_}), sort keys %$payload
     ), '}');
   };
   return $oneline if $self->{oneline};
@@ -121,14 +124,14 @@ sub _format_hash {
           (my $f = $self->_format($p)) =~ s/^/  /msg;
           $f
         }
-  } keys %$payload;
+  } sort keys %$payload;
   if (@f == 1) {
     my ($first, @lines) = split /\n/, $f[0];
     return join("\n", '{', "  $first", '}') unless @lines;
     my $last = $lines[-1] =~ /^[\}\]]$/ ? (pop @lines).' ': '';
     return join("\n", '{ '.$first, (map "  $_", @lines), $last.'}');
   }
-  join("\n",
+  return join("\n",
     '{',
     (map {
       (my $s = $_) =~ s/^/  /msg;
