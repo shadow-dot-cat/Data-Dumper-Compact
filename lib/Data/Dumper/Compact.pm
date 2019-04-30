@@ -42,7 +42,7 @@ sub _format {
 sub _format_array {
   my ($self, $payload) = @_;
   if ($self->{oneline}) {
-    return join(' ', '[', (map $self->_format($_).',', @$payload), ']');
+    return join(' ', '[', join(', ', map $self->_format($_), @$payload), ']');
   }
   my @oneline = do {
     local $self->{oneline} = 1;
@@ -53,6 +53,8 @@ sub _format_array {
     } @$payload
   };
   if (!grep /\n/, @oneline) {
+    s/,$// or $_ = $self->_format($payload->[-1])
+      for local $oneline[-1] = $oneline[-1];
     my $try = join(' ', '[', @oneline, ']');
     if (length $try <= $self->{width}) {
       return $try;
@@ -89,21 +91,26 @@ sub _format_array {
 }
 
 sub _format_hash {
-  my ($self, $f) = @_;
+  my ($self, $payload) = @_;
   my %k = (map +(
     $_ => ($_ =~ /^-?[a-zA-Z]\w+$/
       ? $_
         # stick a space on the front to force dumping of e.g. 123, then strip it
       : do { s/^" /"/, s/\n\Z// for my $s = Dumper(" $_"); $s }
-    )), keys %$f
+    ).' =>'), keys %$payload
   );
+  if ($self->{oneline}) {
+    return join(' ', '{', join(', ',
+      map $k{$_}.' '.$self->_format($payload->{$_}), keys %$payload
+    ), '}');
+  }
   join("\n",
     '{',
     (map {
-      my ($key, $value) = ($_, $f->{$_});
-      (my $s = "$k{$key} => ".$self->_format($value).',') =~ s/^/  /msg;
+      my ($key, $value) = ($_, $payload->{$_});
+      (my $s = "$k{$key} ".$self->_format($value).',') =~ s/^/  /msg;
       $s;
-    } sort keys %$f),
+    } sort keys %$payload),
     '}',
   );
 }
