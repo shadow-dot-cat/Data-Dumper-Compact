@@ -46,7 +46,11 @@ sub _format_array {
   }
   my @oneline = do {
     local $self->{oneline} = 1;
-    map $self->_format($_).',', @$payload
+    map {
+      $_->[0] eq 'string' && $_->[1] =~ /^-[a-zA-Z]\w*$/
+        ? $_->[1].' =>'
+        : $self->_format($_).','
+    } @$payload
   };
   if (!grep /\n/, @oneline) {
     my $try = join(' ', '[', @oneline, ']');
@@ -70,7 +74,7 @@ sub _format_array {
         @bits = ($f);
         next;
       }
-      $f = $self->_format($payload->[$idx]);
+      $f = $self->_format($payload->[$idx]).',';
     }
     if ($f =~ s/^(.{0,${spare}})\n//sm) {
       push @bits, $1;
