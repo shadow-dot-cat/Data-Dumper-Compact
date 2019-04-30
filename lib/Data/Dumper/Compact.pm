@@ -59,6 +59,11 @@ sub _format_array {
     return $try if length $try <= $self->{width};
   }
   local $self->{width} = $self->{width} - 2;
+  if (@$payload == 1) {
+    my @lines = split /\n/, $self->_format($payload->[0]);
+    my ($first, $last) = (shift @lines, pop @lines);
+    return join("\n", '[ '.$first, (map "  $_", @lines), $last.' ]');
+  }
   my @lines;
   my @bits;
   foreach my $idx (0..$#$payload) {
@@ -84,7 +89,7 @@ sub _format_array {
     push(@lines, $f);
   }
   push @lines, join(' ', @bits) if @bits;
-  s/^/  /mg for @lines;  
+  s/^/  /mg for @lines;
   return join("\n", '[', @lines, ']');
 }
 
