@@ -3,7 +3,7 @@ use warnings;
 use Path::Tiny;
 use Data::Dumper::Compact;
 
-my $data = eval($ARGV[0] =~ /^[\{\[]/ ? $ARGV[0] : path($ARGV[0])->slurp);
+my $data = eval '+'.($ARGV[0] =~ /^[\{\[]/ ? $ARGV[0] : path($ARGV[0])->slurp);
 
 die "Invalid data: $@" unless $data;
 
