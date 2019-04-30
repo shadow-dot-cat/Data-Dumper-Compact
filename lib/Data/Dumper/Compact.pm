@@ -1,16 +1,19 @@
 package Data::Dumper::Compact;
 
-use strict;
-use warnings;
+use List::Util qw(sum);
 use Data::Dumper::Concise;
+use Mu;
+use namespace::clean;
 
 sub dump {
   my ($self, $to_dump) = @_;
+  $self = $self->new unless ref($self);
   $self->format($self->render($to_dump));
 }
 
 sub render {
   my ($self, $r) = @_;
+  $self = $self->new unless ref($self);
   if (ref($r) eq 'HASH') {
     return [ hash => { map +($_ => $self->render($r->{$_})), keys %$r } ];
   } elsif (ref($r) eq 'ARRAY') {
@@ -25,25 +28,60 @@ sub render {
 
 sub format {
   my ($self, $to_format) = @_;
-  $self->_format($to_format);
+  $self = $self->new unless ref($self);
+  local $self->{width} = 78;
+  $self->_format($to_format)."\n";
 }
 
 sub _format {
   my ($self, $to_format) = @_;
   my ($type, $payload) = @$to_format;
-  return $self->${\"_format_${type}"}($payload);
+  my $formatted = $self->${\"_format_${type}"}($payload)
 }
 
 sub _format_array {
   my ($self, $payload) = @_;
-  join("\n",
-    '[',
-    (map {
-      (my $s = $self->_format($_).',') =~ s/^/  /msg;
-      $s;
-    } @$payload),
-    ']',
-  );
+  if ($self->{oneline}) {
+    return join(' ', '[', (map $self->_format($_).',', @$payload), ']');
+  }
+  my @oneline = do {
+    local $self->{oneline} = 1;
+    map $self->_format($_).',', @$payload
+  };
+  if (!grep /\n/, @oneline) {
+    my $try = join(' ', '[', @oneline, ']');
+    if (length $try <= $self->{width}) {
+      return $try;
+    }
+  }
+  local $self->{width} = $self->{width} - 2;
+  my @lines;
+  my @bits;
+  foreach my $idx (0..$#$payload) {
+    my $spare = $self->{width} - sum((scalar @bits)+1, map length($_), @bits);
+    my $f = $oneline[$idx];
+    if ($f !~ /\n/) {
+      if (length($f) <= $spare) {
+        push @bits, $f;
+        next;
+      }
+      if (length($f) <= $self->{width}) {
+        push(@lines, join(' ', @bits));
+        @bits = ($f);
+        next;
+      }
+      $f = $self->_format($payload->[$idx]);
+    }
+    if ($f =~ s/^(.{0,${spare}})\n//sm) {
+      push @bits, $1;
+    }
+    push(@lines, join(' ', @bits));
+    @bits = ();
+    push(@lines, $f);
+  }
+  push @lines, join(' ', @bits) if @bits;
+  s/^/  /mg for @lines;  
+  return join("\n", '[', @lines, ']');
 }
 
 sub _format_hash {
@@ -66,7 +104,7 @@ sub _format_hash {
   );
 }
 
-sub _format_string { $_[1] }
+sub _format_string { qq{"$_[1]"} }
 
 sub _format_thing { $_[1] }
 
