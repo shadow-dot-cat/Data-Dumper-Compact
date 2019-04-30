@@ -141,7 +141,14 @@ sub _format_hash {
 sub _format_string {
   my ($self, $str) = @_;
   my $q = $str =~ /[\\']/ ? q{"} : q{'};
-  return qq{${q}$_[1]${q}};
+  my $w = $self->{width} - 2;
+  return $q.$str.$q if length($str) <= $w;
+  $w--;
+  my @f;
+  while (length(my $chunk = substr($str, 0, $w, ''))) {
+    push @f, $q.$chunk.$q;
+  }
+  return join("\n.", @f);
 }
 
 sub _format_thing { $_[1] }
