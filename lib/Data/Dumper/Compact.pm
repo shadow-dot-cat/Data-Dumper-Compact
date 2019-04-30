@@ -56,9 +56,7 @@ sub _format_array {
     s/,$// or $_ = $self->_format($payload->[-1])
       for local $oneline[-1] = $oneline[-1];
     my $try = join(' ', '[', @oneline, ']');
-    if (length $try <= $self->{width}) {
-      return $try;
-    }
+    return $try if length $try <= $self->{width};
   }
   local $self->{width} = $self->{width} - 2;
   my @lines;
@@ -99,18 +97,27 @@ sub _format_hash {
       : do { s/^" /"/, s/\n\Z// for my $s = Dumper(" $_"); $s }
     ).' =>'), keys %$payload
   );
-  if ($self->{oneline}) {
-    return join(' ', '{', join(', ',
+  my $oneline = do {
+    local $self->{oneline} = 1;
+    join(' ', '{', join(', ',
       map $k{$_}.' '.$self->_format($payload->{$_}), keys %$payload
     ), '}');
+  };
+  return $oneline if $self->{oneline};
+  return $oneline if $oneline !~ /\n/ and length($oneline) <= $self->{width};
+  local $self->{width} = $self->{width} - 2;
+  my @f = map $k{$_}.' '.$self->_format($payload->{$_}), keys %$payload;
+  if (@f == 1) {
+    my @lines = split /\n/, $f[0];
+    my ($first, $last) = (shift @lines, pop @lines);
+    return join("\n", '{ '.$first, (map "  $_", @lines), $last.' }');
   }
   join("\n",
     '{',
     (map {
-      my ($key, $value) = ($_, $payload->{$_});
-      (my $s = "$k{$key} ".$self->_format($value).',') =~ s/^/  /msg;
-      $s;
-    } sort keys %$payload),
+      (my $s = $_) =~ s/^/  /msg;
+      $s.',';
+    } @f),
     '}',
   );
 }
