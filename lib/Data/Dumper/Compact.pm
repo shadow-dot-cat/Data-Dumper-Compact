@@ -105,8 +105,17 @@ sub _format_hash {
   };
   return $oneline if $self->{oneline};
   return $oneline if $oneline !~ /\n/ and length($oneline) <= $self->{width};
-  local $self->{width} = $self->{width} - 2;
-  my @f = map $k{$_}.' '.$self->_format($payload->{$_}), keys %$payload;
+  my $width = local $self->{width} = $self->{width} - 2;
+  my @f = map {
+    my $s = $k{$_}.' '.$self->_format(my $p = $payload->{$_});
+    $s =~ /^(.{0,${width}})(?:\n|$)/sm
+      ? $s
+      : $k{$_}."\n".do {
+          local $self->{width} = $self->{width} - 2;
+          (my $f = $self->_format($p)) =~ s/^/  /msg;
+          $f
+        }
+  } keys %$payload;
   if (@f == 1) {
     my @lines = split /\n/, $f[0];
     my ($first, $last) = (shift @lines, pop @lines);
