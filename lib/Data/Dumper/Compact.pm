@@ -5,11 +5,13 @@ use Data::Dumper ();
 use Mu;
 use namespace::clean;
 
-ro width => default => 78;
+ro max_width => default => 78;
 
-lazy each_width => sub { length($_[0]->indent_by) };
+lazy width => sub { shift->max_width };
 
-sub _next_width { $_[0]->width - $_[0]->each_width }
+lazy indent_width => sub { length($_[0]->indent_by) };
+
+sub _next_width { $_[0]->width - $_[0]->indent_width }
 
 ro indent_by => default => '  ';
 
@@ -21,10 +23,21 @@ sub _indent {
 }
 
 lazy dumper => sub {
+  my ($self) = @_;
   my $dd = Data::Dumper->new([]);
   $dd->Trailingcomma(1) if $dd->can('Trailingcomma');
   $dd->Terse(1)->Indent(1)->Useqq(1)->Deparse(1)->Quotekeys(0)->Sortkeys(1);
-  sub { $dd->Values([ $_[0] ])->Dump },
+  my $indent_width = $self->indent_width;
+  my $dp_new = do {
+    require B::Deparse;
+    my $orig = B::Deparse->can('new');
+    sub { my ($self, @args) = @_; $self->$orig('-si'.$indent_width, @args) }
+  };
+  sub {
+    no warnings 'redefine';
+    local *B::Deparse::new = $dp_new;
+    $dd->Values([ $_[0] ])->Dump
+  },
 };
 
 sub _dumper { $_[0]->dumper->($_[1]) }
@@ -157,6 +170,7 @@ sub _format_string {
   my ($self, $str) = @_;
   my $q = $str =~ /[\\']/ ? q{"} : q{'};
   my $w = $self->_next_width;
+  #$w = 20 if $w < 20;
   return $q.$str.$q if length($str) <= $w;
   $w--;
   my @f;
