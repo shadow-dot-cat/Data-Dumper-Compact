@@ -70,10 +70,7 @@ sub _format_array {
   }
   local $self->{width} = $self->{width} - 2;
   if (@$payload == 1) {
-    my ($first, @lines) = split /\n/, $self->_format($payload->[0]);
-    return join("\n", '[', "  $lines[0]", ']') if @lines == 1;
-    my $last = $lines[-1] =~ /^[\}\]]$/ ? (pop @lines).' ': '';
-    return join("\n", '[ '.$first, (map "  $_", @lines), $last.']');
+    return $self->_format_single('[', ']', $self->_format($payload->[0]));
   }
   my @lines;
   my @bits;
@@ -136,10 +133,7 @@ sub _format_hash {
         }
   } sort keys %$payload;
   if (@f == 1) {
-    my ($first, @lines) = split /\n/, $f[0];
-    return join("\n", '{', "  $first", '}') unless @lines;
-    my $last = $lines[-1] =~ /^[\}\]]$/ ? (pop @lines).' ': '';
-    return join("\n", '{ '.$first, (map "  $_", @lines), $last.'}');
+    return $self->_format_single('{', '}', $f[0]);
   }
   return join("\n",
     '{',
@@ -165,6 +159,14 @@ sub _format_string {
 }
 
 sub _format_thing { $_[1] }
+
+sub _format_single {
+  my ($self, $l, $r, $to_format) = @_;
+  my ($first, @lines) = split /\n/, $to_format;
+  return join("\n", $l, "  $first", $r) unless @lines;
+  my $last = $lines[-1] =~ /^[\}\]]$/ ? (pop @lines).' ': '';
+  return join("\n", $l.' '.$first, (map "  $_", @lines), $last.$r);
+}
 
 1;
 
