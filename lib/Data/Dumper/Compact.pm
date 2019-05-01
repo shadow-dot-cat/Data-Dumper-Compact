@@ -134,7 +134,7 @@ sub _format_hash {
   my $width = local $self->{width} = $self->_next_width;
   my @f = map {
     my $s = $k{$_}.' '.$self->_format(my $p = $payload->{$_});
-    $s =~ /^(.{0,${width}})(?:\n|$)/sm
+    $s =~ /\A(.{0,${width}})(?:\n|\Z)/
       ? $s
       : $k{$_}."\n".do {
           local $self->{width} = $self->_next_width;
