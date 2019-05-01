@@ -170,10 +170,10 @@ sub _format_single {
   my ($self, $l, $r, $to_format) = @_;
   my ($first, @lines) = split /\n/, $to_format;
   return join("\n", $l, $self->_indent($first), $r) unless @lines;
-  my $last = $lines[-1] =~ /^[\}\]]$/ ? (pop @lines).' ': '';
   (my $pad = $self->indent_by) =~ s/^ //;
+  my $last = $lines[-1] =~ /^[\}\]]$/ ? (pop @lines).$pad: '';
   return join("\n",
-    $l.$pad.$first,
+    $l.($l eq '{' ? ' ' : $pad).$first,
     (map $self->_indent($_), @lines),
     $last.$r
   );
