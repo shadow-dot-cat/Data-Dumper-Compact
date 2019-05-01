@@ -7,7 +7,9 @@ use namespace::clean;
 
 ro width => default => 78;
 
-sub _next_width { $_[0]->width - length($_[0]->indent_by) }
+lazy each_width => sub { length($_[0]->indent_by) };
+
+sub _next_width { $_[0]->width - $_[0]->each_width }
 
 ro indent_by => default => '  ';
 
@@ -171,7 +173,7 @@ sub _format_single {
   my ($first, @lines) = split /\n/, $to_format;
   return join("\n", $l, $self->_indent($first), $r) unless @lines;
   (my $pad = $self->indent_by) =~ s/^ //;
-  my $last = $lines[-1] =~ /^[\}\]]$/ ? (pop @lines).$pad: '';
+  my $last = $lines[-1] =~ /^[\}\]]/ ? (pop @lines).$pad: '';
   return join("\n",
     $l.($l eq '{' ? ' ' : $pad).$first,
     (map $self->_indent($_), @lines),
