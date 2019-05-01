@@ -49,6 +49,12 @@ sub _format {
   my $formatted = $self->${\"_format_${type}"}($payload)
 }
 
+sub _indent {
+  my ($self, $string) = @_;
+  $string =~ s/^/  /msg;
+  $string;
+}
+
 sub _format_array {
   my ($self, $payload) = @_;
   if ($self->{oneline}) {
@@ -128,8 +134,7 @@ sub _format_hash {
       ? $s
       : $k{$_}."\n".do {
           local $self->{width} = $self->{width} - 2;
-          (my $f = $self->_format($p)) =~ s/^/  /msg;
-          $f
+          $self->_indent($self->_format($p));
         }
   } sort keys %$payload;
   if (@f == 1) {
@@ -137,10 +142,7 @@ sub _format_hash {
   }
   return join("\n",
     '{',
-    (map {
-      (my $s = $_) =~ s/^/  /msg;
-      $s.',';
-    } @f),
+    (map $self->_indent($_).',', @f),
     '}',
   );
 }
