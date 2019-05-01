@@ -7,4 +7,8 @@ my $data = eval '+'.($ARGV[0] =~ /^[\{\[]/ ? $ARGV[0] : path($ARGV[0])->slurp);
 
 die "Invalid data: $@" unless $data;
 
-print Data::Dumper::Compact->dump($data);
+my $args = ($ARGV[1] ? eval '+'.$ARGV[1] : {});
+
+die "Invalid args: $@" unless $args;
+
+print Data::Dumper::Compact->new($args)->dump($data);
