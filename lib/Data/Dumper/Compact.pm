@@ -1,9 +1,18 @@
 package Data::Dumper::Compact;
 
 use List::Util qw(sum);
-use Data::Dumper::Concise;
+use Data::Dumper ();
 use Mu;
 use namespace::clean;
+
+lazy dumper => sub {
+  my $dd = Data::Dumper->new([]);
+  $dd->Trailingcomma(1) if $dd->can('Trailingcomma');
+  $dd->Terse(1)->Indent(1)->Useqq(1)->Deparse(1)->Quotekeys(0)->Sortkeys(1);
+  sub { $dd->Values([ $_[0] ])->Dump },
+};
+
+sub _dumper { $_[0]->dumper->($_[1]) }
 
 sub dump {
   my ($self, $to_dump) = @_;
@@ -19,7 +28,7 @@ sub render {
   } elsif (ref($r) eq 'ARRAY') {
     return [ array => [ map $self->render($_), @$r ] ];
   }
-  (my $thing = Dumper($r)) =~ s/\n\Z//;;
+  (my $thing = $self->_dumper($r)) =~ s/\n\Z//;;
   if (my ($string) = $thing =~ /^"(.*)"$/) {
     return [ string => $string ];
   }
@@ -101,7 +110,7 @@ sub _format_hash {
       ? $_
         # stick a space on the front to force dumping of e.g. 123, then strip it
       : do {
-           s/^" //, s/"\n\Z// for my $s = Dumper(" $_");
+           s/^" //, s/"\n\Z// for my $s = $self->_dumper(" $_");
            $self->_format_string($s)
         }
     ).' =>'), keys %$payload
