@@ -5,7 +5,18 @@ use Data::Dumper ();
 use Mu;
 use namespace::clean;
 
-ro 'width' => default => 78;
+ro width => default => 78;
+
+sub _next_width { $_[0]->width - length($_[0]->indent_by) }
+
+ro indent_by => default => '  ';
+
+sub _indent {
+  my ($self, $string) = @_;
+  my $ib = $self->indent_by;
+  $string =~ s/^/$ib/msg;
+  $string;
+}
 
 lazy dumper => sub {
   my $dd = Data::Dumper->new([]);
@@ -49,12 +60,6 @@ sub _format {
   my $formatted = $self->${\"_format_${type}"}($payload)
 }
 
-sub _indent {
-  my ($self, $string) = @_;
-  $string =~ s/^/  /msg;
-  $string;
-}
-
 sub _format_array {
   my ($self, $payload) = @_;
   if ($self->{oneline}) {
@@ -74,7 +79,7 @@ sub _format_array {
     my $try = join(' ', '[', @oneline, ']');
     return $try if length $try <= $self->{width};
   }
-  local $self->{width} = $self->{width} - 2;
+  local $self->{width} = $self->_next_width;
   if (@$payload == 1) {
     return $self->_format_single('[', ']', $self->_format($payload->[0]));
   }
@@ -103,8 +108,7 @@ sub _format_array {
     push(@lines, $f);
   }
   push @lines, join(' ', @bits) if @bits;
-  s/^/  /mg for @lines;
-  return join("\n", '[', @lines, ']');
+  return join("\n", '[', (map $self->_indent($_), @lines), ']');
 }
 
 sub _format_hash {
@@ -127,13 +131,13 @@ sub _format_hash {
   };
   return $oneline if $self->{oneline};
   return $oneline if $oneline !~ /\n/ and length($oneline) <= $self->{width};
-  my $width = local $self->{width} = $self->{width} - 2;
+  my $width = local $self->{width} = $self->_next_width;
   my @f = map {
     my $s = $k{$_}.' '.$self->_format(my $p = $payload->{$_});
     $s =~ /^(.{0,${width}})(?:\n|$)/sm
       ? $s
       : $k{$_}."\n".do {
-          local $self->{width} = $self->{width} - 2;
+          local $self->{width} = $self->_next_width;
           $self->_indent($self->_format($p));
         }
   } sort keys %$payload;
@@ -150,7 +154,7 @@ sub _format_hash {
 sub _format_string {
   my ($self, $str) = @_;
   my $q = $str =~ /[\\']/ ? q{"} : q{'};
-  my $w = $self->{width} - 2;
+  my $w = $self->_next_width;
   return $q.$str.$q if length($str) <= $w;
   $w--;
   my @f;
@@ -165,9 +169,14 @@ sub _format_thing { $_[1] }
 sub _format_single {
   my ($self, $l, $r, $to_format) = @_;
   my ($first, @lines) = split /\n/, $to_format;
-  return join("\n", $l, "  $first", $r) unless @lines;
+  return join("\n", $l, $self->_indent($first), $r) unless @lines;
   my $last = $lines[-1] =~ /^[\}\]]$/ ? (pop @lines).' ': '';
-  return join("\n", $l.' '.$first, (map "  $_", @lines), $last.$r);
+  (my $pad = $self->indent_by) =~ s/^ //;
+  return join("\n",
+    $l.$pad.$first,
+    (map $self->_indent($_), @lines),
+    $last.$r
+  );
 }
 
 1;
