@@ -5,6 +5,8 @@ use Data::Dumper ();
 use Mu;
 use namespace::clean;
 
+ro 'width' => default => 78;
+
 lazy dumper => sub {
   my $dd = Data::Dumper->new([]);
   $dd->Trailingcomma(1) if $dd->can('Trailingcomma');
@@ -38,7 +40,6 @@ sub render {
 sub format {
   my ($self, $to_format) = @_;
   $self = $self->new unless ref($self);
-  local $self->{width} = 78;
   $self->_format($to_format)."\n";
 }
 
