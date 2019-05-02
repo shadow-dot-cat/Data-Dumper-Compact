@@ -52,7 +52,10 @@ sub render {
   my ($self, $r) = @_;
   $self = $self->new unless ref($self);
   if (ref($r) eq 'HASH') {
-    return [ hash => { map +($_ => $self->render($r->{$_})), keys %$r } ];
+    return [ hash => [
+      [ sort keys %$r ],
+      { map +($_ => $self->render($r->{$_})), keys %$r }
+    ] ];
   } elsif (ref($r) eq 'ARRAY') {
     return [ array => [ map $self->render($_), @$r ] ];
   }
@@ -128,6 +131,7 @@ sub _format_array {
 
 sub _format_hash {
   my ($self, $payload) = @_;
+  my ($keys, $hash) = @$payload;
   my %k = (map +(
     $_ => ($_ =~ /^-?[a-zA-Z_]\w*$/
       ? $_
@@ -136,26 +140,26 @@ sub _format_hash {
            s/^" //, s/"\n\Z// for my $s = $self->_dumper(" $_");
            $self->_format_string($s)
         }
-    ).' =>'), keys %$payload
+    ).' =>'), @$keys
   );
   my $oneline = do {
     local $self->{oneline} = 1;
     join(' ', '{', join(', ',
-      map $k{$_}.' '.$self->_format($payload->{$_}), sort keys %$payload
+      map $k{$_}.' '.$self->_format($hash->{$_}), @$keys
     ), '}');
   };
   return $oneline if $self->{oneline};
   return $oneline if $oneline !~ /\n/ and length($oneline) <= $self->{width};
   my $width = local $self->{width} = $self->_next_width;
   my @f = map {
-    my $s = $k{$_}.' '.$self->_format(my $p = $payload->{$_});
+    my $s = $k{$_}.' '.$self->_format(my $p = $hash->{$_});
     $s =~ /\A(.{0,${width}})(?:\n|\Z)/
       ? $s
       : $k{$_}."\n".do {
           local $self->{width} = $self->_next_width;
           $self->_indent($self->_format($p));
         }
-  } sort keys %$payload;
+  } @$keys;
   if (@f == 1) {
     return $self->_format_single('{', '}', $f[0]);
   }
