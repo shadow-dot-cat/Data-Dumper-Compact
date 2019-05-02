@@ -121,7 +121,7 @@ sub _format_array {
     if ($f =~ s/^(.{0,${spare}})\n//sm) {
       push @bits, $1;
     }
-    push(@lines, join(' ', @bits));
+    push(@lines, join(' ', @bits)) if @bits;
     @bits = ();
     if ($f =~ s/(?:\A|\n)(.{0,${\$self->width}})\Z//sm) {
       push @bits, $1;
