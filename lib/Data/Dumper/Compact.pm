@@ -177,7 +177,9 @@ sub _format_string {
   my ($self, $str) = @_;
   my $q = $str =~ /[\\']/ ? q{"} : q{'};
   my $w = $self->_next_width;
-  #$w = 20 if $w < 20;
+  if ($w < (my $min_w = $self->indent_width*10)) {
+    $w = $min_w;
+  }
   return $q.$str.$q if length($str) <= $w;
   $w--;
   my @f;
