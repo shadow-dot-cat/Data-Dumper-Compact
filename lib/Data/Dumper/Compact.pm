@@ -111,18 +111,21 @@ sub _format_array {
         push @bits, $f;
         next;
       }
-      if (length($f) <= $self->{width}) {
+      if (length($f) <= $self->width) {
         push(@lines, join(' ', @bits));
         @bits = ($f);
         next;
       }
-      $f = $self->_format($payload->[$idx]).',';
     }
+    $f = $self->_format($payload->[$idx]).',';
     if ($f =~ s/^(.{0,${spare}})\n//sm) {
       push @bits, $1;
     }
     push(@lines, join(' ', @bits));
     @bits = ();
+    if ($f =~ s/(?:\A|\n)(.{0,${\$self->width}})\Z//sm) {
+      push @bits, $1;
+    }
     push(@lines, $f);
   }
   push @lines, join(' ', @bits) if @bits;
