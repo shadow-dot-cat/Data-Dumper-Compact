@@ -69,17 +69,29 @@ sub render {
 sub format {
   my ($self, $to_format) = @_;
   $self = $self->new unless ref($self);
-  $self->_format($to_format)."\n";
+  return $self->_format($to_format)."\n";
+  VERTICAL:
+  local $self->{vertical} = 1;
+  return $self->_format($to_format)."\n";
 }
 
 sub _format {
   my ($self, $to_format) = @_;
   my ($type, $payload) = @$to_format;
-  my $formatted = $self->${\"_format_${type}"}($payload)
+  if (!$self->{vertical} and $self->width <= 0) {
+    no warnings 'exiting';
+    goto VERTICAL;
+  }
+  return $self->${\"_format_${type}"}($payload);
 }
 
 sub _format_array {
   my ($self, $payload) = @_;
+  if ($self->{vertical}) {
+    return join("\n", '[',
+      (map $self->_indent($self->_format($_)).',', @$payload),
+    ']');
+  }
   if ($self->{oneline}) {
     return join(' ', '[', join(', ', map $self->_format($_), @$payload), ']');
   }
@@ -145,6 +157,11 @@ sub _format_hash {
         }
     ).' =>'), @$keys
   );
+  if ($self->{vertical}) {
+    return join("\n", '{',
+      (map $self->_indent($k{$_}.' '.$self->_format($hash->{$_}).','), @$keys),
+    '}');
+  }
   my $oneline = do {
     local $self->{oneline} = 1;
     join(' ', '{', join(', ',
@@ -176,10 +193,7 @@ sub _format_hash {
 sub _format_string {
   my ($self, $str) = @_;
   my $q = $str =~ /[\\']/ ? q{"} : q{'};
-  my $w = $self->_next_width;
-  if ($w < (my $min_w = $self->indent_width*10)) {
-    $w = $min_w;
-  }
+  my $w = $self->{vertical} ? 20 : $self->_next_width;
   return $q.$str.$q if length($str) <= $w;
   $w--;
   my @f;
