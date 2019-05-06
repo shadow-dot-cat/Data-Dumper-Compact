@@ -45,19 +45,19 @@ sub _dumper { $_[0]->dumper->($_[1]) }
 sub dump {
   my ($self, $to_dump) = @_;
   $self = $self->new unless ref($self);
-  $self->format($self->render($to_dump));
+  $self->format($self->expand($to_dump));
 }
 
-sub render {
+sub expand {
   my ($self, $r) = @_;
   $self = $self->new unless ref($self);
   if (ref($r) eq 'HASH') {
     return [ hash => [
       [ sort keys %$r ],
-      { map +($_ => $self->render($r->{$_})), keys %$r }
+      { map +($_ => $self->expand($r->{$_})), keys %$r }
     ] ];
   } elsif (ref($r) eq 'ARRAY') {
-    return [ array => [ map $self->render($_), @$r ] ];
+    return [ array => [ map $self->expand($_), @$r ] ];
   }
   (my $thing = $self->_dumper($r)) =~ s/\n\Z//;;
   if (my ($string) = $thing =~ /^"(.*)"$/) {
