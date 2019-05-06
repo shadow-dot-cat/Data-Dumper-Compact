@@ -65,7 +65,7 @@ sub expand {
   }
   (my $thing = $self->_dumper($r)) =~ s/\n\Z//;;
   if (my ($string) = $thing =~ /^"(.*)"$/) {
-    return [ string => $string ];
+    return [ ($string =~ /^-[a-zA-Z]\w*$/ ? 'key' : 'string') => $string ];
   }
   return [ thing => $thing ];
 }
@@ -135,11 +135,7 @@ sub _format_array {
   }
   my @oneline = do {
     local $self->{oneline} = 1;
-    map {
-      $_->[0] eq 'string' && $_->[1] =~ /^-[a-zA-Z]\w*$/
-        ? $_->[1].' =>'
-        : $self->_format($_).','
-    } @$payload
+    map $self->_format($_).($_->[0] eq 'key' ? ' =>' : ','), @$payload;
   };
   if (!grep /\n/, @oneline) {
     s/,$// or $_ = $self->_format($payload->[-1])
@@ -227,6 +223,8 @@ sub _format_hash {
     '}',
   );
 }
+
+sub _format_key { $_[1] }
 
 sub _format_string {
   my ($self, $str) = @_;
