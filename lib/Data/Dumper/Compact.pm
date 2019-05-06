@@ -123,24 +123,43 @@ sub _format {
   return $self->${\"_format_${type}"}($payload);
 }
 
+sub _format_list {
+  my ($self, $payload) = @_;
+  my @plain = grep !/\s/, map $_->[1], grep $_->[0] eq 'string', @$payload;
+  if (@plain == @$payload) {
+    my $try = 'qw('.join(' ', @plain).')';
+    return $try if $self->{oneline} or length($try) <= $self->{width};
+  }
+  return $self->_format_arraylike('(', ')', $payload);
+}
+
 sub _format_array {
   my ($self, $payload) = @_;
   $self->_format_arraylike('[', ']', $payload);
+}
+
+sub _format_el {
+  my ($self, $el) = @_;
+  return $el->[1].' =>' if $el->[0] eq 'key';
+  return $self->_format($el).',';
 }
 
 sub _format_arraylike {
   my ($self, $l, $r, $payload) = @_;
   if ($self->{vertical}) {
     return join("\n", $l,
-      (map $self->_indent($self->_format($_)).',', @$payload),
+      (map $self->_indent($self->_format($_).','), @$payload),
     $r);
   }
   if ($self->{oneline}) {
-    return join(' ', $l, join(', ', map $self->_format($_), @$payload), $r);
+    my @pl = @$payload;
+    my $last = pop @pl;
+    my @el = map $self->_format_el($_), @pl;
+    return join(' ', $l, join(' ', @el, $self->_format($last)), $r);
   }
   my @oneline = do {
     local $self->{oneline} = 1;
-    map $self->_format($_).($_->[0] eq 'key' ? ' =>' : ','), @$payload;
+    map $self->_format_el($_), @$payload;
   };
   if (!grep /\n/, @oneline) {
     s/,$// or $_ = $self->_format($payload->[-1])
@@ -168,7 +187,7 @@ sub _format_arraylike {
         next;
       }
     }
-    $f = $self->_format($payload->[$idx]).',';
+    $f = $self->_format_el($payload->[$idx]);
     if ($f =~ s/^(.{0,${spare}})\n//sm) {
       push @bits, $1;
     }
@@ -229,7 +248,7 @@ sub _format_hash {
   );
 }
 
-sub _format_key { $_[1] }
+sub _format_key { shift->_format_string(@_) }
 
 sub _format_string {
   my ($self, $str) = @_;

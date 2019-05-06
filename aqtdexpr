@@ -20,12 +20,21 @@ my %select_clauses; @select_clauses{@select_clauses} = -@select_clauses..-1;
 
 $ddc->add_transform({
   hash => sub {
-    return $_[2] unless +($_[3][-1]||'') eq '-select';
-    return [ hash => [
-      [ nsort_by { $select_clauses{$_}||0 } @{$_[2][1][0]} ],
-      $_[2][1][1]
-    ] ];
-  }
+    if (($_[3][-1]||'') eq '-select') {
+      return [ hash => [
+        [ nsort_by { $select_clauses{$_}||0 } @{$_[2][1][0]} ],
+        $_[2][1][1]
+      ] ];
+    }
+    return $_[2];
+  },
+  array => sub {
+    if (($_[3][-2]||'') =~ /^with/ and $_[3][-1] == 0) {
+      my ($first, @rest) = @{$_[2][1]};
+      return [ array => [ [ key => $first->[1] ], [ list => \@rest ] ] ];
+    }
+    return $_[2];
+  },
 });
     
 print $ddc->dump($data);
