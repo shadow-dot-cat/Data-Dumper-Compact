@@ -1,0 +1,31 @@
+use strict;
+use warnings;
+use Path::Tiny;
+use Data::Dumper::Compact;
+use List::UtilsBy qw(nsort_by);
+
+my $data = eval '+'.($ARGV[0] =~ /^[\{\[]/ ? $ARGV[0] : path($ARGV[0])->slurp);
+
+die "Invalid data: $@" unless $data;
+
+my $args = ($ARGV[1] ? eval '+'.$ARGV[1] : {});
+
+die "Invalid args: $@" unless $args;
+
+my $ddc = Data::Dumper::Compact->new($args);
+
+my @select_clauses = qw(with with_recursive _ select from where order_by group_by having);
+
+my %select_clauses; @select_clauses{@select_clauses} = -@select_clauses..-1;
+
+$ddc->add_transform({
+  hash => sub {
+    return $_[2] unless +($_[3][-1]||'') eq '-select';
+    return [ hash => [
+      [ nsort_by { $select_clauses{$_}||0 } @{$_[2][1][0]} ],
+      $_[2][1][1]
+    ] ];
+  }
+});
+    
+print $ddc->dump($data);

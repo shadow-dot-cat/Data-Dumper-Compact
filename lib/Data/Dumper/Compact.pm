@@ -15,6 +15,10 @@ sub _next_width { $_[0]->width - $_[0]->indent_width }
 
 ro indent_by => default => '  ';
 
+rw transforms => default => sub { [] };
+
+sub add_transform { push(@{$_[0]->transforms}, $_[1]); $_[0] }
+
 sub _indent {
   my ($self, $string) = @_;
   my $ib = $self->indent_by;
@@ -30,7 +34,7 @@ lazy dumper => sub {
   my $indent_width = $self->indent_width;
   my $dp_new = do {
     require B::Deparse;
-    my $orig = B::Deparse->can('new');
+    my $orig = \&B::Deparse::new;
     sub { my ($self, @args) = @_; $self->$orig('-si'.$indent_width, @args) }
   };
   sub {
@@ -43,9 +47,10 @@ lazy dumper => sub {
 sub _dumper { $_[0]->dumper->($_[1]) }
 
 sub dump {
-  my ($self, $to_dump) = @_;
-  $self = $self->new unless ref($self);
-  $self->format($self->expand($to_dump));
+  my ($self, $to_dump, $options) = @_;
+  ref($self) and local @{$self}{keys %{$options||{}}} = values %{$options||{}};
+  ref($self) or $self = $self->new($options||{});
+  $self->format($self->transform($self->transforms, $self->expand($to_dump)));
 }
 
 sub expand {
@@ -63,6 +68,41 @@ sub expand {
     return [ string => $string ];
   }
   return [ thing => $thing ];
+}
+
+sub transform {
+  my ($self, $tfspec, $data) = @_;
+  return $data unless $tfspec;
+  $self->_transform($tfspec, $data, []);
+}
+
+sub _transform {
+  my ($self, $tfspec, $data, $path) = @_;
+  my $type = $data->[0];
+  if ($type eq 'hash') {
+    my %h = %{$data->[1][1]};
+    $data = [
+      $data->[0],
+      [
+        $data->[1][0],
+        +{ map +(
+             $_ => $self->_transform($tfspec, $h{$_}, [ @$path, $_ ])
+          ), keys %h
+        },
+      ]
+    ];
+  } elsif ($type eq 'array') {
+    my @a = @{$data->[1]};
+    $data = [
+      $data->[0],
+      [ map $self->_transform($tfspec, $a[$_], [ @$path, $_ ]), 0..$#a ]
+    ];
+  }
+  foreach my $tf (ref($tfspec) eq 'ARRAY' ? @$tfspec : $tfspec) {
+    next unless my $cb = ref($tf) eq 'HASH' ? $tf->{$type}||$tf->{_} : $tf;
+    $data = $self->$cb($tfspec, $data, $path);
+  }
+  return $data;
 }
 
 sub format {
