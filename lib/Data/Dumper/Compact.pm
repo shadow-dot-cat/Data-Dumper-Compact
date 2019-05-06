@@ -125,13 +125,18 @@ sub _format {
 
 sub _format_array {
   my ($self, $payload) = @_;
+  $self->_format_arraylike('[', ']', $payload);
+}
+
+sub _format_arraylike {
+  my ($self, $l, $r, $payload) = @_;
   if ($self->{vertical}) {
-    return join("\n", '[',
+    return join("\n", $l,
       (map $self->_indent($self->_format($_)).',', @$payload),
-    ']');
+    $r);
   }
   if ($self->{oneline}) {
-    return join(' ', '[', join(', ', map $self->_format($_), @$payload), ']');
+    return join(' ', $l, join(', ', map $self->_format($_), @$payload), $r);
   }
   my @oneline = do {
     local $self->{oneline} = 1;
@@ -140,12 +145,12 @@ sub _format_array {
   if (!grep /\n/, @oneline) {
     s/,$// or $_ = $self->_format($payload->[-1])
       for local $oneline[-1] = $oneline[-1];
-    my $try = join(' ', '[', @oneline, ']');
+    my $try = join(' ', $l, @oneline, $r);
     return $try if length $try <= $self->{width};
   }
   local $self->{width} = $self->_next_width;
   if (@$payload == 1) {
-    return $self->_format_single('[', ']', $self->_format($payload->[0]));
+    return $self->_format_single($l, $r, $self->_format($payload->[0]));
   }
   my @lines;
   my @bits;
@@ -175,7 +180,7 @@ sub _format_array {
     push(@lines, $f);
   }
   push @lines, join(' ', @bits) if @bits;
-  return join("\n", '[', (map $self->_indent($_), @lines), ']');
+  return join("\n", $l, (map $self->_indent($_), @lines), $r);
 }
 
 sub _format_hash {
