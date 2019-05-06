@@ -50,7 +50,6 @@ sub dump {
 
 sub expand {
   my ($self, $r) = @_;
-  $self = $self->new unless ref($self);
   if (ref($r) eq 'HASH') {
     return [ hash => [
       [ sort keys %$r ],
@@ -68,7 +67,6 @@ sub expand {
 
 sub format {
   my ($self, $to_format) = @_;
-  $self = $self->new unless ref($self);
   return $self->_format($to_format)."\n";
   VERTICAL:
   local $self->{vertical} = 1;
