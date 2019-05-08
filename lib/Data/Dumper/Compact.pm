@@ -717,6 +717,8 @@ are accustomed, except more compact.
 The following is a description of the current algorithm of DDC. We reserve
 the right to change it for the better.
 
+If you didn't already read the overview examples in L</WHY> do that first.
+
 Vertical mode means DDC has given up on fitting within the desired width and
 is now just trying to not use I<too> much vertical space.
 
