@@ -18,15 +18,16 @@ my @select_clauses = qw(with with_recursive _ select from where order_by group_b
 
 my %select_clauses; @select_clauses{@select_clauses} = -@select_clauses..-1;
 
+sub key_sorter (&) {
+  my ($sorter) = @_;
+  +{ hash => sub {
+      my ($keys, $map) = @{$_[2]};
+      return [ hash => [ [ $sorter->(@$keys) ], $map ] ];
+  } }
+}
+
 $ddc->add_transform(
-  [ -select => { hash => sub {
-    my ($self, $type, $payload, $path) = @_;
-    my ($keys, $map) = @$payload;
-    return [ hash => [
-      [ nsort_by { $select_clauses{$_}||0 } @$keys ],
-      $map
-    ] ];
-  } } ],
+  [ -select => key_sorter { nsort_by { $select_clauses{$_}||0 } @_ } ],
 )->add_transform(
   [ qr/^with/, sub { ($_ % 2) == 0 }, { array => sub {
     #my ($self, $type, $payload, $path) = @_;
