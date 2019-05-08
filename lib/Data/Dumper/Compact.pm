@@ -112,8 +112,7 @@ sub _transform {
     my @a = @$payload;
     $payload = [ map $self->_transform($a[$_], [ @$path, $_ ]), 0..$#a ];
   }
-  my $tfspec = $self->transforms;
-  foreach my $tf (ref($tfspec) eq 'ARRAY' ? @$tfspec : $tfspec) {
+  foreach my $tf (@{$self->transforms}) {
     next unless my $cb = ref($tf) eq 'HASH' ? $tf->{$type}||$tf->{_} : $tf;
     ($type, $payload) = @{
       $self->$cb($type, $payload, $path)
@@ -402,9 +401,9 @@ Constructor. Takes a hash or hashref of L</OPTIONS>
 
 =head2 dump
 
-  Data::Dumper::Concise->dump($data, \%options?);
+  my $formatted = Data::Dumper::Concise->dump($data, \%options?);
   
-  $ddc->dump($data, \%merge_options?);
+  my $formatted = $ddc->dump($data, \%merge_options?);
 
 This is the method you're going to want to call most of the time, and ties
 together the rest of the functionality into a single data-structure-to-string
@@ -450,6 +449,9 @@ and if the type is a hash:
 where the keys provide an order for formatting, and the value map is a
 hashref of keys to expanded values.
 
+A plain string becomes a C<string>, unless it fits the C<-foo> style
+pattern that autoquotes, in which case it becomes a C<key>.
+
 =head2 add_transform
 
   $ddc->add_transform(sub { ... });
@@ -459,8 +461,76 @@ Appends a transform to C<$ddc->transforms>, see L</transform> for behaviour.
 
 =head2 transform
 
-  $ddc->transform($tfspec, $exp);
+  my $tf_exp = $ddc->transform($tfspec, $exp);
+
+Takes a transform specification and expanded tagged data and returns the
+transformed expanded expression. A transform spec is an arrayref containing
+either a subref, which is called for all types, or a hashref, which is called
+only for the types specified. All transforms are called as a method on the
+C<$ddc> with the arguments of C<$type, $payload, $path> where C<$path> is
+an arrayref of the keys/values of the containing hashes and arrays.
+
+Each transform is expected to return either nothing, to indicate it doesn't
+wish to modify the result, or a replacement expanded data structure. The
+simplest form of transform is a subref, which gets called for everything.
+
+So, to add ' IN MICE' to every string that's part of an array under a hash
+key called study_results, i.e.:
+
+  my $data = { study_results => [
+      'Sense Of Touch Is Formed In the Brain Before Birth'.
+      "We can’t currently cure MS but a single cell could change that",
+  ] };
+  
+  my $tf_exp = $ddc->transform([ sub {
+    my ($self, $type, $payload, $path) = @_;
+    return unless $type eq 'string' and ($path->[-2]||'') eq 'study_results';
+    return [ $string, $payload.' IN MICE' ];
+  } ], $ddc->expand($data));
+
+will return:
+
+  [ hash => [
+    [ 'study_results' ],
+    { study_results => [ array => [
+      [ string => 'Sense Of Touch Is Formed In the Brain Before Birth IN MICE' ],
+      [ string => "We can’t currently cure MS but a single cell could change that IN MICE", ],
+    ] ] }
+  ] ]
+
+If a hashref is found, then the values are expected to be transforms, and
+DDC will use C<$hashref->{$type}||$hashref->{_}> as the transform, or skip
+if neither is present. So the previous example could be written as:
+
+  $ddc->transform([ { string => sub {
+    my ($self, $type, $payload, $path) = @_;
+    return unless ($path->[-2]||'') eq 'study_results';
+    return [ $string, $payload.' IN MICE' ];
+  } } ], $ddc->expand($data));
 
 =head2 format
+
+  my $formatted = $ddc->format($exp);
+
+Takes expanded tagged data and renders it to a formatted string, suitable
+for printing or warning or etc.
+
+Accepts the following type tags: C<array>, C<list>,  C<hash>, C<key>,
+C<string>, C<thing>. Arrays and hashes are formatted as compactly as possible
+within the constraint of L</max_width>, but if overflow occurs then DDC falls
+back to spilling everything vertically, so newlines are used for most spacing
+and therefore it doesn't exceed the max width any more than strictly
+necessary.
+
+Strings are formatted as single quote if obvious, and double quote if not.
+
+Keys are treated as strings when present as hash values, but when an
+element of array values, are formatted ask C<< the_key => >> where possible.
+
+Lists are formatted as single line C<qw()> expressions if possible, or
+C<( ... )> if not.
+
+Arrays and hashes are formatted in the manner to which one would hope readers
+are accustomed, except more compact.
 
 =cut
