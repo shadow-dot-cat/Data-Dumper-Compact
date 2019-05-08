@@ -709,4 +709,91 @@ C<( ... )> if not.
 Arrays and hashes are formatted in the manner to which one would hope readers
 are accustomed, except more compact.
 
+=head1 ALGORITHM
+
+The following is a description of the current algorithm of DDC. We reserve
+the right to change it for the better.
+
+Vertical mode means DDC has given up on fitting within the desired width and
+is now just trying to not use I<too> much vertical space.
+
+Oneline mode is DDC testing to see if a single line rendering of something
+will fit within the available space. Things will often be rendered more than
+once since DDC is optimising for compact readable output rather than raw
+straight line performance.
+
+=head2 Top level formatting
+
+If something is formatted and the remaining width is zero or negative, DDC
+accepts default on L</max_width> and bails out to a fully vertical approach
+so it overflows the desired width no more than necessary.
+
+=head2 Array formatting
+
+If already in vertical mode, formats one array element per line, appended
+with C<,>.
+
+If in oneline mode, formats all but the last element according to the
+L</Array element> rules, the last element according to normal formatting,
+and joins them with C<' '> in the hopes this is narrow enough.
+
+Otherwise, first attempts to format each element as a single line, and
+assemble the same way, and returns that if it fits within the available
+remaining width.
+
+If there's only a single internal member, tries to use the
+L</Single entry formatting> strategy to cuddle it.
+
+Otherwise, attempts to bundle things as best possible: Each element is
+formatted according to the L</Array element> rules, and multiple results
+are concatenated together onto a single line where that still remains
+within the available width.
+
+=head2 Array element
+
+Elements are normally formatted as C<< $formatted.',' >> except if an
+element is of type C<key> in which cases it becomes C<< $key => >>.
+
+=head2 List formatting
+
+The type C<list> is synthetic and only introduced by transforms.
+
+It is formatted identically to an arrayref except with C<( )> instead of
+C<[ ]>, with the exception that if it consists of only plain strings and
+will fit onto a single line, it formats as a C<qw(x y x)> style list.
+
+=head2 Single entry formatting
+
+Where possible, a single entry will be cuddled such that the opening
+delimeters are both on the first line, and the closing delimeters both on
+the final line, to reduce the vertical space consumption of nested single
+entry array and/or hashrefs.
+
+=head2 Hash formatting
+
+If already in vertical mode, key/value pairs are formatted separated by
+newlines, with no attention paid to key length.
+
+If potentially in oneline mode, key/value pairs are formatted separated by
+C<', '> and the value is returned if forced or if remaining width allows the
+oneline rendering.
+
+Otherwise, all key/value pairs are formatted as C<< key => value >> where
+possibly, but if the first line of the value is too long, the value is
+moved to the next line and indented.
+
+If there's only a single such key/value pair, tries to use the
+L</Single entry formatting> strategy to cuddle it.
+
+Otherwise returns key/value pairs indented and separated by newlines
+
+=head2 String formatting
+
+Uses single quotes if sure that's safe, double quotes otherwise.
+
+Attempts to format a string within the available width, using multiple
+lines and the C<.> concatenation operator if necessary,.
+
+The target width is set to 20 in vertical mode to try and not be too ugly.
+
 =cut
