@@ -478,7 +478,7 @@ Default: C<'  '>
 =head2 indent_width
 
 How many characters one indent should be considered to be. Generally you
-only need to manually set this if your L</ident_by> is C<"\t">.
+only need to manually set this if your L</indent_by> is C<"\t">.
 
 Default: C<< length($self->indent_by) >>
 
