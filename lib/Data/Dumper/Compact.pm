@@ -480,7 +480,7 @@ Default: C<'  '>
 How many characters one indent should be considered to be. Generally you
 only need to manually set this if your L</ident_by> is C<"\t">.
 
-Default: C<length($self->indent_by)>
+Default: C<< length($self->indent_by) >>
 
 =head2 transforms
 
@@ -584,7 +584,8 @@ pattern that autoquotes, in which case it becomes a C<key>.
   $ddc->add_transform(sub { ... });
   $ddc->add_transform({ hash => sub { ... }, _ => sub { ... });
 
-Appends a transform to C<$ddc->transforms>, see L</transform> for behaviour.
+Appends a transform to C<< $ddc->transforms >>, see L</transform> for
+behaviour.
 
 =head2 transform
 
@@ -592,10 +593,16 @@ Appends a transform to C<$ddc->transforms>, see L</transform> for behaviour.
 
 Takes a transform specification and expanded tagged data and returns the
 transformed expanded expression. A transform spec is an arrayref containing
-either a subref, which is called for all types, or a hashref, which is called
-only for the types specified. All transforms are called as a method on the
-C<$ddc> with the arguments of C<$type, $payload, $path> where C<$path> is
-an arrayref of the keys/values of the containing hashes and arrays.
+transforms, where each transform is applied in order, so the last transform
+added via L</add_transform> will be the last one to transform the data (each
+transform will consist of a datastructure representing which parts of the
+C<$exp> tree it should be called for, plus subroutines representing the
+relevant transforms).
+
+Transform subroutines are called as a method on the C<$ddc> with the
+arguments of C<$type, $payload, $path> where C<$path> is an arrayref of the
+keys/values of the containing hashes and arrays, aggregated as DDC descends
+through the C<$exp> tree.
 
 Each transform is expected to return either nothing, to indicate it doesn't
 wish to modify the result, or a replacement expanded data structure. The
@@ -626,7 +633,7 @@ will return:
   ] ]
 
 If a hashref is found, then the values are expected to be transforms, and
-DDC will use C<$hashref->{$type}||$hashref->{_}> as the transform, or skip
+DDC will use C<< $hashref->{$type}||$hashref->{_} >> as the transform, or skip
 if neither is present. So the previous example could be written as:
 
   $ddc->transform([ { string => sub {
