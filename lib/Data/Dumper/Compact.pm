@@ -520,9 +520,9 @@ This function is not exported by default.
 
 =head2 new
 
-  Data::Dumper::Concise->new;
-  Data::Dumper::Concise->new(%options);
-  Data::Dumper::Concise->new(\%options);
+  my $ddc = Data::Dumper::Concise->new;
+  my $ddc = Data::Dumper::Concise->new(%options);
+  my $ddc = Data::Dumper::Concise->new(\%options);
 
 Constructor. Takes a hash or hashref of L</OPTIONS>
 
@@ -586,6 +586,8 @@ pattern that autoquotes, in which case it becomes a C<key>.
 
 Appends a transform to C<< $ddc->transforms >>, see L</transform> for
 behaviour.
+
+Returns C<$ddc> to enable chaining.
 
 =head2 transform
 
