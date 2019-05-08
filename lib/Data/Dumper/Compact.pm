@@ -112,8 +112,27 @@ sub _transform {
     my @a = @$payload;
     $payload = [ map $self->_transform($a[$_], [ @$path, $_ ]), 0..$#a ];
   }
-  foreach my $tf (@{$self->transforms}) {
-    next unless my $cb = ref($tf) eq 'HASH' ? $tf->{$type}||$tf->{_} : $tf;
+  TF: foreach my $tf (@{$self->transforms}) {
+    next TF unless my $cb = ref($tf) eq 'HASH' ? $tf->{$type}||$tf->{_} : $tf;
+    if (ref($cb) eq 'ARRAY') {
+      my @match = @$cb;
+      $cb = pop @match;
+      next TF if @match > @$path; # not deep enough
+      MATCH: foreach my $idx (0..$#match) {
+        next MATCH unless defined(my $m = $match[$idx]);
+        my $rpv = $path->[$idx-@match];
+        if (!ref($m)) {
+          next TF unless $rpv eq $m;
+        } elsif (ref($m) eq 'Regexp') {
+          next TF unless $rpv =~ $m;
+        } elsif (ref($m) eq 'CODE') {
+          local $_ = $rpv;
+          next TF unless $m->($rpv);
+        } else {
+          die "Unknown path match type for $m";
+        }
+      }
+    }
     ($type, $payload) = @{
       $self->$cb($type, $payload, $path)
       || [ $type, $payload ]
@@ -485,7 +504,7 @@ key called study_results, i.e.:
   my $tf_exp = $ddc->transform([ sub {
     my ($self, $type, $payload, $path) = @_;
     return unless $type eq 'string' and ($path->[-2]||'') eq 'study_results';
-    return [ $string, $payload.' IN MICE' ];
+    return [ $type, $payload.' IN MICE' ];
   } ], $ddc->expand($data));
 
 will return:
@@ -505,8 +524,40 @@ if neither is present. So the previous example could be written as:
   $ddc->transform([ { string => sub {
     my ($self, $type, $payload, $path) = @_;
     return unless ($path->[-2]||'') eq 'study_results';
-    return [ $string, $payload.' IN MICE' ];
+    return [ $type, $payload.' IN MICE' ];
   } } ], $ddc->expand($data));
+
+If the value of the spec entry itself I<or> the relevant hash value is an
+arrayref, it is assumed to contain a spec for trailing path entries, with
+the last element being the transform subroutine. A path entry match can be
+a scalar (tested via C<eq> since array indices are always integers), a
+regexp, C<undef> to indicate "any value is fine here", or a subroutine which
+will be called with the path entry as both C<$_[0]> and C<$_>. So the example
+we've been using could B<also> be written as:
+
+  $ddc->transform([ { string => [
+    'study_results', undef,
+    sub { [ string => $_[2].' IN MICE' ] }
+  ] } ], $ddc->expand($data));
+
+or
+
+  $ddc->transform([ { string => [
+    qr/^study_results$/, sub { 1 },
+    sub { [ string => $_[2].' IN MICE' ] }
+  ] } ], $ddc->expand($data));
+
+Note that while the C<$tfspec> is not passed to transform subroutines,
+for the duration of the L</transform> call the L</transforms> option is
+localised to the provided routine, so
+
+  sub {
+    my ($self, $type, $payload, $path) = @_;
+    my $tfspec = $self->transforms;
+    ...
+  }
+
+will return the top level C<$tfspec> passed to the transform call.
 
 =head2 format
 
