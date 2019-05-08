@@ -639,7 +639,7 @@ will return:
     [ 'study_results' ],
     { study_results => [ array => [
       [ string => 'Sense Of Touch Is Formed In the Brain Before Birth IN MICE' ],
-      [ string => "We can’t currently cure MS but a single cell could change that IN MICE", ],
+      [ string => "We can't currently cure MS but a single cell could change that IN MICE", ],
     ] ] }
   ] ]
 
@@ -734,28 +734,45 @@ so it overflows the desired width no more than necessary.
 =head2 Array formatting
 
 If already in vertical mode, formats one array element per line, appended
-with C<,>.
+with C<,>:
 
-If in oneline mode, formats all but the last element according to the
-L</Array element> rules, the last element according to normal formatting,
-and joins them with C<' '> in the hopes this is narrow enough.
+  [
+    1,
+    2,
+    3
+  ]
 
-Otherwise, first attempts to format each element as a single line, and
-assemble the same way, and returns that if it fits within the available
-remaining width.
+If in possible oneline mode, formats all but the last element according to
+the L</Array element> rules, the last element according to normal formatting,
+and joins them with C<' '> in the hopes this is narrow enough. Return this if
+oneline is forced or it fits:
+
+  [ 1, 2, 3 ]
 
 If there's only a single internal member, tries to use the
 L</Single entry formatting> strategy to cuddle it.
+
+  [ [
+    <something inside>
+  ] ]
 
 Otherwise, attempts to bundle things as best possible: Each element is
 formatted according to the L</Array element> rules, and multiple results
 are concatenated together onto a single line where that still remains
 within the available width.
 
+  [
+    'foo', 'bar', 'baz',
+    'red', 'white', 'blue',
+  ]
+
 =head2 Array element
 
 Elements are normally formatted as C<< $formatted.',' >> except if an
 element is of type C<key> in which cases it becomes C<< $key => >>.
+
+  "whatever the smeg",
+  smeg_off =>
 
 =head2 List formatting
 
@@ -765,37 +782,80 @@ It is formatted identically to an arrayref except with C<( )> instead of
 C<[ ]>, with the exception that if it consists of only plain strings and
 will fit onto a single line, it formats as a C<qw(x y x)> style list.
 
+  qw(foo bar baz)
+  (
+    'foo',
+    'bar',
+    'baz',
+  )
+
 =head2 Single entry formatting
 
 Where possible, a single entry will be cuddled such that the opening
-delimeters are both on the first line, and the closing delimeters both on
+delimiters are both on the first line, and the closing delimeters both on
 the final line, to reduce the vertical space consumption of nested single
 entry array and/or hashrefs.
+
+  to => { -select => {
+      ...
+  } }
+
+  [ 'SRV:8FB66F32' ], [ [
+      '/opt/voice-srvc-native/bin/async-srvc-att-gateway-poller', 33,
+      'NERV::Voice::SRV::Native::AsyncSRVATTGatewayPoller::main',
+  ] ],
 
 =head2 Hash formatting
 
 If already in vertical mode, key/value pairs are formatted separated by
 newlines, with no attention paid to key length.
 
+  {
+    foo => ...,
+    bar => ...,
+  }
+
 If potentially in oneline mode, key/value pairs are formatted separated by
 C<', '> and the value is returned if forced or if remaining width allows the
 oneline rendering.
+
+  { foo => ..., bar => ... }
 
 Otherwise, all key/value pairs are formatted as C<< key => value >> where
 possibly, but if the first line of the value is too long, the value is
 moved to the next line and indented.
 
+  key => 'shortvalue'
+  key =>
+    'overlylongvalue'
+
 If there's only a single such key/value pair, tries to use the
 L</Single entry formatting> strategy to cuddle it.
 
+  { zathrus => {
+      listened_to => 0,
+  } }
+
 Otherwise returns key/value pairs indented and separated by newlines
+
+  {
+    foo => ...,
+    bar => ...,
+  }
 
 =head2 String formatting
 
 Uses single quotes if sure that's safe, double quotes otherwise.
 
+  'foo bar baz quux'
+  "could have been '' but nicer to not screw up\n the indents with a newline"
+
 Attempts to format a string within the available width, using multiple
 lines and the C<.> concatenation operator if necessary,.
+
+  'this would be an'
+  .'annoyingly long'
+  .'string'
 
 The target width is set to 20 in vertical mode to try and not be too ugly.
 
