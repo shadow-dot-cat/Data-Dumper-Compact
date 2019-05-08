@@ -352,7 +352,7 @@ OO usage:
 
 =head1 WHY
 
-L<Data::Dumper::Concise>, henceforth referred to as DDC, was born because
+L<Data::Dumper::Compact>, henceforth referred to as DDC, was born because
 I was annoyed at valuable wasted whitespace paging through both
 L<Data::Dumper> and L<Data::Dump> based logs - L<Data::Dump> attempts to
 format horizontally first, but then if it fails, immediately switches to
@@ -520,15 +520,15 @@ This function is not exported by default.
 
 =head2 new
 
-  my $ddc = Data::Dumper::Concise->new;
-  my $ddc = Data::Dumper::Concise->new(%options);
-  my $ddc = Data::Dumper::Concise->new(\%options);
+  my $ddc = Data::Dumper::Compact->new;
+  my $ddc = Data::Dumper::Compact->new(%options);
+  my $ddc = Data::Dumper::Compact->new(\%options);
 
 Constructor. Takes a hash or hashref of L</OPTIONS>
 
 =head2 dump
 
-  my $formatted = Data::Dumper::Concise->dump($data, \%options?);
+  my $formatted = Data::Dumper::Compact->dump($data, \%options?);
   
   my $formatted = $ddc->dump($data, \%merge_options?);
 
