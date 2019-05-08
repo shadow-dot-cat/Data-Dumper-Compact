@@ -193,22 +193,17 @@ sub _format_arraylike {
       (map $self->_indent($self->_format($_).','), @$payload),
     $r);
   }
-  if ($self->{oneline}) {
-    my @pl = @$payload;
-    my $last = pop @pl;
-    my @el = map $self->_format_el($_), @pl;
-    return join(' ', $l, join(' ', @el, $self->_format($last)), $r);
-  }
+  my @pl = @$payload;
+  my $last_pl = pop @pl;
   my @oneline = do {
     local $self->{oneline} = 1;
-    map $self->_format_el($_), @$payload;
+    ((map $self->_format_el($_), @pl), $self->_format($last_pl));
   };
   if (!grep /\n/, @oneline) {
-    s/,$// or $_ = $self->_format($payload->[-1])
-      for local $oneline[-1] = $oneline[-1];
     my $try = join(' ', $l, @oneline, $r);
-    return $try if length $try <= $self->{width};
+    return $try if $self->{oneline} or length $try <= $self->{width};
   }
+  $oneline[-1] .= ',';
   local $self->{width} = $self->_next_width;
   if (@$payload == 1) {
     return $self->_format_single($l, $r, $self->_format($payload->[0]));
