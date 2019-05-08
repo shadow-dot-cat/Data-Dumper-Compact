@@ -621,7 +621,7 @@ key called study_results, i.e.:
 
   my $data = { study_results => [
       'Sense Of Touch Is Formed In the Brain Before Birth'.
-      "We can’t currently cure MS but a single cell could change that",
+      "We can't currently cure MS but a single cell could change that",
   ] };
   
   my $tf_exp = $ddc->transform([ sub {
