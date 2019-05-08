@@ -112,29 +112,35 @@ sub _transform {
     my @a = @$payload;
     $payload = [ map $self->_transform($a[$_], [ @$path, $_ ]), 0..$#a ];
   }
-  TF: foreach my $tf (@{$self->transforms}) {
-    next TF unless my $cb = ref($tf) eq 'HASH' ? $tf->{$type}||$tf->{_} : $tf;
-    if (ref($cb) eq 'ARRAY') {
-      my @match = @$cb;
-      $cb = pop @match;
-      next TF if @match > @$path; # not deep enough
-      MATCH: foreach my $idx (0..$#match) {
-        next MATCH unless defined(my $m = $match[$idx]);
-        my $rpv = $path->[$idx-@match];
-        if (!ref($m)) {
-          next TF unless $rpv eq $m;
-        } elsif (ref($m) eq 'Regexp') {
-          next TF unless $rpv =~ $m;
-        } elsif (ref($m) eq 'CODE') {
-          local $_ = $rpv;
-          next TF unless $m->($rpv);
-        } else {
-          die "Unknown path match type for $m";
+  TF: foreach my $this_tf (@{$self->transforms}) {
+    my $tf = $this_tf;
+    my $last_tf = 0;
+    while ($tf != $last_tf) {
+      $last_tf = $tf;
+      if (ref($tf) eq 'ARRAY') {
+        my @match = @$tf;
+        $tf = pop @match;
+        next TF if @match > @$path; # not deep enough
+        MATCH: foreach my $idx (0..$#match) {
+          next MATCH unless defined(my $m = $match[$idx]);
+          my $rpv = $path->[$idx-@match];
+          if (!ref($m)) {
+            next TF unless $rpv eq $m;
+          } elsif (ref($m) eq 'Regexp') {
+            next TF unless $rpv =~ $m;
+          } elsif (ref($m) eq 'CODE') {
+            local $_ = $rpv;
+            next TF unless $m->($rpv);
+          } else {
+            die "Unknown path match type for $m";
+          }
         }
+      } elsif (ref($tf) eq 'HASH') {
+        next TF unless $tf = $tf->{$type}||$tf->{_};
       }
     }
     ($type, $payload) = @{
-      $self->$cb($type, $payload, $path)
+      $self->$tf($type, $payload, $path)
       || [ $type, $payload ]
     };
   }

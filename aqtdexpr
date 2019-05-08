@@ -18,20 +18,21 @@ my @select_clauses = qw(with with_recursive _ select from where order_by group_b
 
 my %select_clauses; @select_clauses{@select_clauses} = -@select_clauses..-1;
 
-$ddc->add_transform({
-  hash => [ -select => sub {
+$ddc->add_transform(
+  [ -select => { hash => sub {
     my ($self, $type, $payload, $path) = @_;
     my ($keys, $map) = @$payload;
     return [ hash => [
       [ nsort_by { $select_clauses{$_}||0 } @$keys ],
       $map
     ] ];
-  } ],
-  array => [ qr/^with/, sub { ($_ % 2) == 0 }, sub {
+  } } ],
+)->add_transform(
+  [ qr/^with/, sub { ($_ % 2) == 0 }, { array => sub {
     #my ($self, $type, $payload, $path) = @_;
     my ($first, @rest) = @{$_[2]};
     return [ array => [ [ key => $first->[1] ], [ list => \@rest ] ] ];
-  } ],
-});
+  } } ],
+);
     
 print $ddc->dump($data);
