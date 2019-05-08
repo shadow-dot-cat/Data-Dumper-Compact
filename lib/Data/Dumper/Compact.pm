@@ -41,6 +41,8 @@ lazy dumper => sub {
   $dd->Trailingcomma(1) if $dd->can('Trailingcomma');
   $dd->Terse(1)->Indent(1)->Useqq(1)->Deparse(1)->Quotekeys(0)->Sortkeys(1);
   my $indent_width = $self->indent_width;
+  # feed the indent width down into B::Deparse - not using tabs because
+  # it has no way to tell it how wide a tab is that I could find
   my $dp_new = do {
     require B::Deparse;
     my $orig = \&B::Deparse::new;
@@ -82,7 +84,9 @@ sub expand {
   } elsif (ref($data) eq 'ARRAY') {
     return [ array => [ map $self->expand($_), @$data ] ];
   }
-  (my $thing = $self->_dumper($data)) =~ s/\n\Z//;;
+  (my $thing = $self->_dumper($data)) =~ s/\n\Z//;
+
+  # -foo and friends automatically become 'key' type, all else stays 'string'
   if (my ($string) = $thing =~ /^"(.*)"$/) {
     return [ ($string =~ /^-[a-zA-Z]\w*$/ ? 'key' : 'string') => $string ];
   }
@@ -92,6 +96,7 @@ sub expand {
 sub transform {
   my ($self, $tfspec, $exp) = @_;
   return $exp unless $tfspec;
+  # This is redundant from ->dump but consistent for direct user calls
   local $self->{transforms} = $tfspec;
   $self->_transform($exp, []);
 }
@@ -150,6 +155,11 @@ sub _transform {
 sub format {
   my ($self, $exp) = @_;
   return $self->_format($exp)."\n";
+  # If we realise we've flat run out of horizontal space, we need to be able
+  # to jump back up the call stack to the top and start again - hence the
+  # presence of this label to jump to from _format - of course, if that
+  # clause never gets hit then our first _format call returns and therefore
+  # the label is never reached.
   VERTICAL:
   local $self->{vertical} = 1;
   return $self->_format($exp)."\n";
@@ -159,6 +169,9 @@ sub _format {
   my ($self, $exp) = @_;
   my ($type, $payload) = @$exp;
   if (!$self->{vertical} and $self->width <= 0) {
+    # We've run out of horizontal space, engage 'vertical sprawl mode' and
+    # restart from the top by jumping back up the current call stack to the
+    # VERTICAL label in the top-level call to format.
     no warnings 'exiting';
     goto VERTICAL;
   }
@@ -195,6 +208,10 @@ sub _format_arraylike {
   }
   my @pl = @$payload;
   my $last_pl = pop @pl;
+  # We don't want 'foo =>' at the end of the array, so for the last
+  # entry use plain _format which will render key-as-string, and don't
+  # add a comma yet because we don't want a trailing comma on a single
+  # line render
   my @oneline = do {
     local $self->{oneline} = 1;
     ((map $self->_format_el($_), @pl), $self->_format($last_pl));
@@ -205,15 +222,18 @@ sub _format_arraylike {
   }
   local $self->{width} = $self->_next_width;
   if (@$payload == 1) {
+    # single entry, re-format the payload without oneline set
     return $self->_format_single($l, $r, $self->_format($payload->[0]));
   }
   my @lines;
   my @bits;
-  $oneline[-1] .= ',';
+  $oneline[-1] .= ','; # going into multiline mode, *now* we add the comma
   foreach my $idx (0..$#$payload) {
     my $spare = $self->{width} - sum((scalar @bits)+1, map length($_), @bits);
     my $f = $oneline[$idx];
     if ($f !~ /\n/) {
+      # single line entry, add to the bits for the current line if it'll fit
+      # otherwise collapse bits into a line and start afresh with this entry
       if (length($f) <= $spare) {
         push @bits, $f;
         next;
@@ -224,15 +244,22 @@ sub _format_arraylike {
         next;
       }
     }
+    # If it didn't format as a single line, re-format to avoid confusion
     $f = $self->_format_el($payload->[$idx]);
+
+    # if we can fit the first line in the available remaining space in the
+    # current line, do that
     if ($f =~ s/^(.{0,${spare}})\n//sm) {
       push @bits, $1;
     }
     push(@lines, join(' ', @bits)) if @bits;
     @bits = ();
+    # if the last line is less than our available width, turn that into
+    # an entry in a new line
     if ($f =~ s/(?:\A|\n)(.{0,${\$self->width}})\Z//sm) {
       push @bits, $1;
     }
+    # stuff whatever's left from the middle into the line array
     push(@lines, $f);
   }
   push @lines, join(' ', @bits) if @bits;
