@@ -514,7 +514,13 @@ is installed in the calling package which behaves like calling L</dump>.
 
 If the second argument is a hashref, it becomes the options passed to L</new>.
 
-This function is not exported by default.
+This feature is effectively sugar over L</dump_cb>, in that:
+
+  Data::Dumper::Compact->import(ddc => \%options)
+
+is equivalent to:
+
+  *ddc = Data::Dumper::Compact->new(\%options)->dump_cb;
 
 =head1 METHODS
 
@@ -675,6 +681,8 @@ localised to the provided routine, so
   }
 
 will return the top level C<$tfspec> passed to the transform call.
+
+Thanks to L<http://twitter.com/justsaysinmice> for the inspiration.
 
 =head2 format
 
