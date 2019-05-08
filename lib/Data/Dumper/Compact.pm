@@ -494,9 +494,12 @@ Default: C<[]>
 The dumper function to be used for dumping things DDC doesn't understand,
 such as coderefs, regexprefs, etc.
 
-Defaults to the same options as L<Data::Dumper::Concise> with a little bit
-of extra cleverness to make L<B::Deparse> use the correct indentation, since
-for some reason L<Data::Dumper> doesn't (at the time of writing) do that.
+Defaults to the same options as L<Data::Dumper::Concise> (which is, itself,
+only a L<Data::Dumper> configuration albeit it comes with L<Devel::Dwarn>
+which is rather more interesting) - although on top of that we add a little
+bit of extra cleverness to make L<B::Deparse> use the correct indentation,
+since for some reason L<Data::Dumper> doesn't (at the time of writing) do
+that.
 
 If you supply it yourself, it needs to be a single argument coderef - you
 could for example use C<\&Data::Dumper::Dumper> though that would almost
