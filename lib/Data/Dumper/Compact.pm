@@ -474,7 +474,7 @@ Default: C<78>
 
 The string to indent by. To set e.g. 4 space indent, pass C<' 'x4>.
 
-Default: C<'  '>
+Default: C<'  '> (two spaces).
 
 =head2 indent_width
 
@@ -657,10 +657,10 @@ if neither is present. So the previous example could be written as:
 If the value of the spec entry itself I<or> the relevant hash value is an
 arrayref, it is assumed to contain a spec for trailing path entries, with
 the last element being the transform subroutine. A path entry match can be
-a scalar (tested via C<eq> since array indices are always integers), a
-regexp, C<undef> to indicate "any value is fine here", or a subroutine which
-will be called with the path entry as both C<$_[0]> and C<$_>. So the example
-we've been using could B<also> be written as:
+an exact scalar (tested via C<eq> since it works fine for both strings and
+integer array indices), regexp, C<undef> to indicate "any value is fine here",
+or a subroutine which will be called with the path entry as both C<$_[0]> and
+C<$_>. So the example we've been using could B<also> be written as:
 
   $ddc->transform([ { string => [
     'study_results', undef,
