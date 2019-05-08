@@ -350,6 +350,114 @@ OO usage:
   
   warn $ddc->dump($data, \%extra_options);
 
+=head1 WHY
+
+L<Data::Dumper::Concise>, henceforth referred to as DDC, was born because
+I was annoyed at valuable wasted whitespace paging through both
+L<Data::Dumper> and L<Data::Dump> based logs - L<Data::Dump> attempts to
+format horizontally first, but then if it fails, immediately switches to
+formatting fully vertically, rather than trying to e.g. format a six element
+arrayref three per line.
+
+So here's a few of the specifics:
+
+=head2 Arrays and Strings
+
+Given arrays consisting of reasonably long strings, DDC does its best to
+produce a sane representation within its L</max_width>:
+
+  [
+    1, 2, [
+      'longstringislonglongstringislonglongstringislong',
+      'longstringislonglongstringislong', 'longstringislong',
+      'longstringislonglongstringislonglongstringislong', 'longstringislong',
+      'longstringislonglongstringislong', 'longstringislong',
+      'longstringislonglongstringislong',
+      'longstringislonglongstringislonglongstringislong',
+      'longstringislonglongstringislong', 'longstringislonglongstringislong',
+      'longstringislonglongstringislonglongstringislong', 'longstringislong',
+      'longstringislong', 'longstringislonglongstringislonglongstringislong',
+      'longstringislong', 'longstringislong', 'longstringislong',
+      'longstringislonglongstringislong',
+      'longstringislonglongstringislonglongstringislong', 'a', 'b', 'c',
+      'longstringislonglongstringislonglongstringislonglongstringislong',
+      'longstringislonglongstringislonglongstringislonglongstringislong',
+      'longstringislonglongstringislonglongstringislonglongstringislong',
+    ], 3,
+  ]
+
+=head2 Keys and Hashrefs
+
+When faced with a C<-foo> style value, it gets a C<< => >> even in an array,
+and hash values that we can are single-line formatted:
+
+  [
+    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', [
+      'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+    ],
+    -blah => { baz => 'quux', foo => 'bar' },
+  ]
+
+=head2 The String Thing
+
+Strings are single quoted when DDC is absolutely sure that's safe, and
+double quoted otherwise:
+
+  [ { -foo => {
+        bar =>
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        baz => "bbbbbbbbbbbbbbbbbbbb\nbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  } } ]
+
+=head2 Lonely hash key
+
+When a single hash key can't be formatted in a oneline form within the
+length, DDC will try spilling it to its own line:
+
+  {
+    -xxxxxxxxxxxxx => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+  }
+
+If even that isn't enough, it formats it below and indented:
+
+  { -xxxxxxxxxxxxx =>
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+  }
+
+=head2 Strings and the dot operator
+
+If a string simply won't fit, DDC splits it and indents it using C<.>:
+
+  [ 'xyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyx'
+    .'yxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy'
+    .'xyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyx'
+    .'yxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy'
+  ]
+
+=head2 Other things
+
+Anything DDC doesn't understand is passed through its L</dumper> option,
+though since L<Data::Dumper> (at the time of writing) forgets to pass through
+its indentation level to L<B::Concise>, we slightly tweak that behaviour on
+the way in for the default L</dumper>. But the end result looks like:
+
+  { foo => { bar => sub {
+        use warnings;
+        use strict 'refs';
+        my($x, $y) = @_;
+        return $x * $y;
+  } } }
+
+=head2 Summary
+
+Hopefully it's clear what the goal is, and what we've done to achieve it.
+
+While the system is already somewhat configurable, further options are almost
+certainly implementable, although if you really want such an option then we
+expect you to turn up with documentation and test cases for it so we just
+have to write the code.
+
 =head1 OPTIONS
 
 =head2 max_width
