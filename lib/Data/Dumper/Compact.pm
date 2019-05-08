@@ -822,7 +822,7 @@ oneline rendering.
   { foo => ..., bar => ... }
 
 Otherwise, all key/value pairs are formatted as C<< key => value >> where
-possibly, but if the first line of the value is too long, the value is
+possible, but if the first line of the value is too long, the value is
 moved to the next line and indented.
 
   key => 'shortvalue'
