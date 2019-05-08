@@ -203,13 +203,13 @@ sub _format_arraylike {
     my $try = join(' ', $l, @oneline, $r);
     return $try if $self->{oneline} or length $try <= $self->{width};
   }
-  $oneline[-1] .= ',';
   local $self->{width} = $self->_next_width;
   if (@$payload == 1) {
     return $self->_format_single($l, $r, $self->_format($payload->[0]));
   }
   my @lines;
   my @bits;
+  $oneline[-1] .= ',';
   foreach my $idx (0..$#$payload) {
     my $spare = $self->{width} - sum((scalar @bits)+1, map length($_), @bits);
     my $f = $oneline[$idx];
