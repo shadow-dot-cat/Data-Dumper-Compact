@@ -31,9 +31,8 @@ $ddc->add_transform({
   array => sub {
     my ($self, $type, $payload, $path) = @_;
     return unless ($path->[-2]||'') =~ /^with/ and $path->[-1] == 0;
-::Dwarn([ path => $path ]);
     my ($first, @rest) = @$payload;
-    return ::Dwarn([ array => [ [ key => $first->[1] ], [ list => \@rest ] ] ]);
+    return [ array => [ [ key => $first->[1] ], [ list => \@rest ] ] ];
   },
 });
     

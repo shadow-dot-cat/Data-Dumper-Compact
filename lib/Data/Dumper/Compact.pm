@@ -56,7 +56,7 @@ lazy dumper => sub {
 sub _dumper { $_[0]->dumper->($_[1]) }
 
 sub dump {
-  my ($self, $to_dump, $opts) = @_;
+  my ($self, $data, $opts) = @_;
   # if we're an object, localize anything provided in the options,
   # and also blow away the dependent attributes if indent_by is changed
   ref($self) and $opts
@@ -64,7 +64,7 @@ sub dump {
     and $opts->{indent_by}
     and delete @{$self}{grep !$opts->{$_}, qw(indent_width dumper)};
   ref($self) or $self = $self->new($opts||{});
-  $self->format($self->transform($self->transforms, $self->expand($to_dump)));
+  $self->format($self->transform($self->transforms, $self->expand($data)));
 }
 
 sub dump_cb {
@@ -73,16 +73,16 @@ sub dump_cb {
 }
 
 sub expand {
-  my ($self, $r) = @_;
-  if (ref($r) eq 'HASH') {
+  my ($self, $data) = @_;
+  if (ref($data) eq 'HASH') {
     return [ hash => [
-      [ sort keys %$r ],
-      { map +($_ => $self->expand($r->{$_})), keys %$r }
+      [ sort keys %$data ],
+      { map +($_ => $self->expand($data->{$_})), keys %$data }
     ] ];
-  } elsif (ref($r) eq 'ARRAY') {
-    return [ array => [ map $self->expand($_), @$r ] ];
+  } elsif (ref($data) eq 'ARRAY') {
+    return [ array => [ map $self->expand($_), @$data ] ];
   }
-  (my $thing = $self->_dumper($r)) =~ s/\n\Z//;;
+  (my $thing = $self->_dumper($data)) =~ s/\n\Z//;;
   if (my ($string) = $thing =~ /^"(.*)"$/) {
     return [ ($string =~ /^-[a-zA-Z]\w*$/ ? 'key' : 'string') => $string ];
   }
@@ -90,15 +90,15 @@ sub expand {
 }
 
 sub transform {
-  my ($self, $tfspec, $data) = @_;
-  return $data unless $tfspec;
+  my ($self, $tfspec, $exp) = @_;
+  return $exp unless $tfspec;
   local $self->{transforms} = $tfspec;
-  $self->_transform($data, []);
+  $self->_transform($exp, []);
 }
 
 sub _transform {
-  my ($self, $data, $path) = @_;
-  my ($type, $payload) = @$data;
+  my ($self, $exp, $path) = @_;
+  my ($type, $payload) = @$exp;
   if ($type eq 'hash') {
     my %h = %{$payload->[1]};
     $payload = [
@@ -124,16 +124,16 @@ sub _transform {
 }
 
 sub format {
-  my ($self, $to_format) = @_;
-  return $self->_format($to_format)."\n";
+  my ($self, $exp) = @_;
+  return $self->_format($exp)."\n";
   VERTICAL:
   local $self->{vertical} = 1;
-  return $self->_format($to_format)."\n";
+  return $self->_format($exp)."\n";
 }
 
 sub _format {
-  my ($self, $to_format) = @_;
-  my ($type, $payload) = @$to_format;
+  my ($self, $exp) = @_;
+  my ($type, $payload) = @$exp;
   if (!$self->{vertical} and $self->width <= 0) {
     no warnings 'exiting';
     goto VERTICAL;
@@ -284,8 +284,8 @@ sub _format_string {
 sub _format_thing { $_[1] }
 
 sub _format_single {
-  my ($self, $l, $r, $to_format) = @_;
-  my ($first, @lines) = split /\n/, $to_format;
+  my ($self, $l, $r, $raw) = @_;
+  my ($first, @lines) = split /\n/, $raw;
   return join("\n", $l, $self->_indent($first), $r) unless @lines;
   (my $pad = $self->indent_by) =~ s/^ //;
   my $last = $lines[-1] =~ /^[\}\]]/ ? (pop @lines).$pad: '';
@@ -418,9 +418,9 @@ invocation.
 
 =head2 dump_cb
 
-Returns a subroutine reference that's a curried call to L</dump>:
-
   my $cb = $ddc->dump_cb;
+
+Returns a subroutine reference that's a curried call to L</dump>:
   
   $cb->($data, \%extra_options); # equivalent to $ddc->dump(...)
 
@@ -431,9 +431,35 @@ Mostly useful for if you want to create a custom C<ddc()> like thing:
 
 =head2 expand
 
-=head2 transform
+  my $exp = $ddc->expand($data);
+
+Expands a data structure to DDC tagged data. The result is, recursively,
+
+  [ $type, $payload ]
+
+where if $type is one of C<string>, C<key>, or C<thing>, the payload is a
+simple string (C<thing> meaning something unknown and therefore delegated to
+L</dumper>). If the type is an array:
+
+  [ array => \@values ]
+
+and if the type is a hash:
+
+  [ hash => [ \@keys, \%value_map ] ]
+
+where the keys provide an order for formatting, and the value map is a
+hashref of keys to expanded values.
 
 =head2 add_transform
+
+  $ddc->add_transform(sub { ... });
+  $ddc->add_transform({ hash => sub { ... }, _ => sub { ... });
+
+Appends a transform to C<$ddc->transforms>, see L</transform> for behaviour.
+
+=head2 transform
+
+  $ddc->transform($tfspec, $exp);
 
 =head2 format
 
