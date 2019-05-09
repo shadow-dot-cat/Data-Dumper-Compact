@@ -27,11 +27,8 @@ sub import {
 }
 
 sub Df {
-  if (@_ == 1) {
-    $ddc->dump($_[0]);
-  } else {
-    $ddc->format([ list => [ map $ddc->expand($_), @_ ] ]);
-  }
+  my @exp = map $ddc->expand($_), @_;
+  $ddc->format(@exp > 1 ? [ list => \@exp ] : $exp[0]);
 }
 
 sub DfT {
