@@ -3,11 +3,27 @@ package Devel::DDCWarn;
 use strictures 2;
 use Data::Dumper::Compact;
 
-use Exporter 'import';
+use base qw(Exporter);
 
 our @EXPORT = qw(Df Dto DtoT Dwarn Derr DwarnT DerrT);
 
 our $ddc = Data::Dumper::Compact->new;
+
+sub import {
+  my ($class, @args) = @_;
+  my $opts;
+  if (@args and ref($args[0]) eq 'HASH') {
+    $opts = shift @args;
+  } else {
+    while (@args and $args[0] =~ /^-(.*)$/) {
+      my $k = $1;
+      my $v = (shift(@args), shift(@args));
+      $opts->{$k} = $v;
+    }
+  }
+  $ddc = Data::Dumper::Compact->new($opts) if $opts;
+  $class->export_to_level(1, @args);
+}
 
 sub Df {
   if (@_ == 1) {
