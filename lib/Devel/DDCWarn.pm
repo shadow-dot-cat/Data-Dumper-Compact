@@ -7,7 +7,7 @@ use Exporter 'import';
 
 our @EXPORT = qw(Df Dto DtoT Dwarn Derr DwarnT DerrT);
 
-my $ddc = Data::Dumper::Compact->new;
+our $ddc = Data::Dumper::Compact->new;
 
 sub Df {
   if (@_ == 1) {
