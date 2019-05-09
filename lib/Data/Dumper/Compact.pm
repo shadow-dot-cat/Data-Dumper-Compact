@@ -1,14 +1,13 @@
 package Data::Dumper::Compact;
-use strict;
-use warnings;
-
-our $VERSION = '0.001001';
-$VERSION =~ tr/_//d;
 
 use List::Util qw(sum);
 use Data::Dumper ();
 use Mu;
+use strictures 2;
 use namespace::clean;
+
+our $VERSION = '0.001001';
+$VERSION =~ tr/_//d;
 
 sub import {
   my ($class, $ddc, $opts) = @_;

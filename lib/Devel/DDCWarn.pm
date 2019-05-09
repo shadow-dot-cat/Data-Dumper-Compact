@@ -10,12 +10,22 @@ our @EXPORT = qw(Df Dto DtoT Dwarn Derr DwarnT DerrT);
 my $ddc = Data::Dumper::Compact->new;
 
 sub Df {
-  return '' unless @_;
   if (@_ == 1) {
     $ddc->dump($_[0]);
   } else {
     $ddc->format([ list => [ map $ddc->expand($_), @_ ] ]);
   }
+}
+
+sub DfT {
+  my $tag = shift;
+  my @exp = map $ddc->expand($_), @_;
+  $ddc->format([
+    list => [
+      [ key => $tag ],
+      (@exp > 1 ? [ list => \@exp ] : $exp[0])
+    ]
+  ]);
 }
 
 sub Dto {
@@ -28,7 +38,7 @@ sub Dto {
 sub DtoT {
   my ($to, $tag) = (shift, shift);
   return unless @_;
-  $to->(Df($tag => @_));
+  $to->(DfT($tag => @_));
   return wantarray ? @_ : $_[0];
 }
 
