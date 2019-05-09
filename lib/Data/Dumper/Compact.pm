@@ -2,7 +2,7 @@ package Data::Dumper::Compact;
 use strict;
 use warnings;
 
-our $VERSION = '0.001000';
+our $VERSION = '0.001001';
 $VERSION =~ tr/_//d;
 
 use List::Util qw(sum);
