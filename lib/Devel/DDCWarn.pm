@@ -26,20 +26,16 @@ sub import {
   $class->export_to_level(1, @args);
 }
 
-sub Df {
-  my @exp = map $ddc->expand($_), @_;
-  $ddc->format(@exp > 1 ? [ list => \@exp ] : $exp[0]);
+sub _ef {
+  map +(@_ > 1 ? [ list => $_ ] : $_->[0]),
+    [ map $ddc->expand($_), @_ ];
 }
 
+sub Df { $ddc->format(_ef(@_)) }
+
 sub DfT {
-  my $tag = shift;
-  my @exp = map $ddc->expand($_), @_;
-  $ddc->format([
-    list => [
-      [ key => $tag ],
-      (@exp > 1 ? [ list => \@exp ] : $exp[0])
-    ]
-  ]);
+  my ($tag, @args) = @_;
+  $ddc->format([ list => [ [ key => $tag ], _ef(@args) ] ]);
 }
 
 sub Dto {
