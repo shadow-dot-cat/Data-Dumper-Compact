@@ -22,6 +22,7 @@ sub import {
     }
   }
   $ddc = Data::Dumper::Compact->new($opts) if $opts;
+  return if @args == 1 and $args[0] eq ':none';
   $class->export_to_level(1, @args);
 }
 
