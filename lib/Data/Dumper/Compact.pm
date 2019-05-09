@@ -384,10 +384,6 @@ OO usage:
   
   warn $ddc->dump($data, \%extra_options);
 
-=head1 DESCRIPTION
-
-A new module.
-
 =head1 WHY
 
 L<Data::Dumper::Compact>, henceforth referred to as DDC, was born because
