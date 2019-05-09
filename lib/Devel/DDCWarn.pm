@@ -184,11 +184,13 @@ A tag plus a single value is formatted as a two element list. A tag plus
 multiple values is formatted as a list containing the tag and a list of the
 values.
 
-=head1 CUSTOMISATION
+=head1 CONFIGURATION
 
   use Devel::DDCWarn \%options, ...;
 
   perl -MDevel::DDCWarn=-optname,value,-other,value ...;
+
+  $Devel::DDCWarn::ddc = Data::Dumper::Compact->new(\%options);
 
 Options passed as a hashref on a C<use> line or using - prefixing on the
 command line are used to initialise the L<Data::Dumper::Compact> object.
@@ -198,7 +200,7 @@ something initialises us again later, this will reset the (single) global
 C<$ddc> used by this code and change all output throught the process.
 
 However, if you need a localised change of formatting style, C<$ddc> is a full
-fledged global you are are allowed to C<local> it:
+fledged global you are absolutely allowed to C<local> it:
 
   my $ddc = Data::Dumper::Compact->new(\%my_local_options);
   local $Devel::DDCWarn::ddc = $ddc;
