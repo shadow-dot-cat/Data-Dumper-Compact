@@ -184,4 +184,27 @@ A tag plus a single value is formatted as a two element list. A tag plus
 multiple values is formatted as a list containing the tag and a list of the
 values.
 
+=head1 CUSTOMISATION
+
+  use Devel::DDCWarn \%options, ...;
+
+  perl -MDevel::DDCWarn=-optname,value,-other,value ...;
+
+Options passed as a hashref on a C<use> line or using - prefixing on the
+command line are used to initialise the L<Data::Dumper::Compact> object.
+
+Note that this primarily being a debugging and/or scripting oriented tool, if
+something initialises us again later, this will reset the (single) global
+C<$ddc> used by this code and change all output throught the process.
+
+However, if you need a localised change of formatting style, C<$ddc> is a full
+fledged global you are are allowed to C<local> it:
+
+  my $ddc = Data::Dumper::Compact->new(\%my_local_options);
+  local $Devel::DDCWarn::ddc = $ddc;
+
+If you have a convincing reason for using this functionality in a way where
+the globality is a bug rather than a feature, please start a conversation
+with the authors so we can figure out what to do about it.
+
 =cut
