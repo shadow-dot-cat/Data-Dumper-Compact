@@ -383,7 +383,7 @@ OO usage:
   
   warn $ddc->dump($data, \%extra_options);
 
-=head1 WHY
+=head1 DESCRIPTION
 
 L<Data::Dumper::Compact>, henceforth referred to as DDC, was born because
 I was annoyed at valuable wasted whitespace paging through both
