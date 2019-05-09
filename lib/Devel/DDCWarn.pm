@@ -74,6 +74,48 @@ Devel::DDCWarn - Easy printf-style debugging with L<Data::Dumper::Concise>
   my $x = DwarnT X => some_sub_call(); # warns with tag 'X' and returns value
   my @y = DerrT X => other_sub_call(); # similar
 
+=head1 DESCRIPTION
+
+L<Devel::DDCWarn> is a L<Devel::Dwarn> equivalent for L<Data::Dumper::Compact>.
+
+The idea, basically, is that it's incredibly annoying to start off with code
+like this:
+
+  return some_sub_call();
+
+and then realise you need the value, so you have to write:
+
+  my @ret = some_sub_call();
+  warn Dumper [ THE_THING => @ret ];
+  return @ret;
+
+With L<Devel::DDCWarn>, one can instead write:
+
+  return DwarnT THE_THING => some_sub_call();
+
+and expect it to Just Work.
+
+To integrate with your logging, you can do:
+
+  our $L = sub { $log->debug("DDC debugging: ".$_[0] };
+  ...
+  return DtoT $L, THE_THING => some_sub_call();
+
+When applying printf debugging style approaches, it's also very useful to
+be able to do:
+
+  perl -MDevel::DDCwarn ...
+
+and then within the code being debugged, abusing the fact that a prefix of ::
+is short for main:: so we can add:
+
+  return ::DwarnT THE_THING => some_sub_call();
+
+and if we forget to remove them, the lack of command-line L<Devel::DDCWarn>
+exported into main:: will produce a compile time failure. This is exceedingly
+useful for noticing you forgot to remove a debug statement I<before> you
+commit it along with the test and fix.
+
 =head1 EXPORTS
 
 All of these subroutines are exported by default.
