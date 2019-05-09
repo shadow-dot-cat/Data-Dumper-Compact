@@ -1,4 +1,9 @@
 package Data::Dumper::Compact;
+use strict;
+use warnings;
+
+our $VERSION = '0.001000';
+$VERSION =~ tr/_//d;
 
 use List::Util qw(sum);
 use Data::Dumper ();
@@ -343,6 +348,7 @@ sub _format_single {
 }
 
 1;
+__END__
 
 =head1 NAME
 
@@ -377,6 +383,10 @@ OO usage:
   warn $ddc->dump($data);
   
   warn $ddc->dump($data, \%extra_options);
+
+=head1 DESCRIPTION
+
+A new module.
 
 =head1 WHY
 
@@ -1037,5 +1047,23 @@ lines and the C<.> concatenation operator if necessary,.
   .'string'
 
 The target width is set to 20 in vertical mode to try and not be too ugly.
+
+=head1 AUTHOR
+
+mst - Matt S Trout (cpan:MSTROUT) <mst@shadowcat.co.uk>
+
+=head1 CONTRIBUTORS
+
+None so far.
+
+=head1 COPYRIGHT
+
+Copyright (c) 2019 the Data::Dumper::Compact L</AUTHOR> and L</CONTRIBUTORS>
+as listed above.
+
+=head1 LICENSE
+
+This library is free software and may be distributed under the same terms
+as perl itself. See L<https://dev.perl.org/licenses/>.
 
 =cut
