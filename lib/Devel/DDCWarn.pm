@@ -200,7 +200,7 @@ something initialises us again later, this will reset the (single) global
 C<$ddc> used by this code and change all output throught the process.
 
 However, if you need a localised change of formatting style, C<$ddc> is a full
-fledged global you are absolutely allowed to C<local> it:
+fledged global so you are absolutely allowed to C<local> it:
 
   my $ddc = Data::Dumper::Compact->new(\%my_local_options);
   local $Devel::DDCWarn::ddc = $ddc;
@@ -208,5 +208,15 @@ fledged global you are absolutely allowed to C<local> it:
 If you have a convincing reason for using this functionality in a way where
 the globality is a bug rather than a feature, please start a conversation
 with the authors so we can figure out what to do about it.
+
+=head1 COPYRIGHT
+
+Copyright (c) 2019 the L<Data::Dumper::Compact/AUTHOR> and
+L<Data::Dumper::Compact/CONTRIBUTORS> as listed in L<Data::Dumper::Compact>.
+
+=head1 LICENSE
+
+This library is free software and may be distributed under the same terms
+as perl itself. See L<https://dev.perl.org/licenses/>.
 
 =cut
