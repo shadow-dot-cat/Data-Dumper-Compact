@@ -1,6 +1,0 @@
-{ foo => { bar => sub {
-      use warnings;
-      use strict 'refs';
-      my($x, $y) = @_;
-      return $x * $y;
-} } }

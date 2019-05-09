@@ -1,4 +1,6 @@
 Revision history for Data-Dumper-Compact
 
+  - Remove subref test because B::Deparse output varies between perl versions
+
 0.001000 - 2019-05-09
   - initial release
