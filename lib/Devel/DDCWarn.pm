@@ -62,7 +62,7 @@ sub DerrT { DtoT($E, @_) }
 
 =head1 NAME
 
-Devel::DDCWarn - Easy printf-style debugging with L<Data::Dumper::Concise>
+Devel::DDCWarn - Easy printf-style debugging with L<Data::Dumper::Compact>
 
 =head1 SYNOPSIS
 
