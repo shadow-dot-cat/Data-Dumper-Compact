@@ -1,5 +1,6 @@
 Revision history for Data-Dumper-Compact
 
+0.002000 - 2019-05-09
   - Add Devel::DDCWarn in the style of Devel::Dwarn
 
 0.001001 - 2019-05-09
