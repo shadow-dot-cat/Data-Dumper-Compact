@@ -38,19 +38,15 @@ sub DfT {
   $ddc->format([ list => [ [ key => $tag ], _ef(@args) ] ]);
 }
 
-sub Dto {
-  my $to = shift;
-  return unless @_;
-  $to->(Df(@_));
-  return wantarray ? @_ : $_[0];
+sub _dto {
+  my ($fmt, $noret, $to, @args) = @_;
+  return unless @args > $noret;
+  $to->($fmt->(@args));
+  return wantarray ? @args[$noret..$#args] : $args[$noret];
 }
 
-sub DtoT {
-  my ($to, $tag) = (shift, shift);
-  return unless @_;
-  $to->(DfT($tag => @_));
-  return wantarray ? @_ : $_[0];
-}
+sub Dto { _dto(\&Df, 0, @_) }
+sub DtoT { _dto(\&DfT, 1, @_) }
 
 my $W = sub { warn $_[0] };
 
