@@ -1,5 +1,7 @@
 Revision history for Data-Dumper-Compact
 
+  - Collapse single key/value in list/array correctly
+
 0.002001 - 2019-05-09
   - Fix stupid documentation error
 

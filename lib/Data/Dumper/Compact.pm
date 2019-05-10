@@ -229,6 +229,18 @@ sub _format_arraylike {
     # single entry, re-format the payload without oneline set
     return $self->_format_single($l, $r, $self->_format($payload->[0]));
   }
+  if (@$payload == 2 and $payload->[0][0] eq 'key') {
+    my $s = (my $k = $self->_format_el($payload->[0]))
+            .' '.$self->_format(my $p = $payload->[1]);
+    return $self->_format_single($l, $r, do {
+      $s =~ /\A(.{0,${\$self->width}})(?:\n|\Z)/
+        ? $s
+        : $k."\n".do {
+            local $self->{width} = $self->_next_width;
+            $self->_indent($self->_format($p));
+          }
+    });
+  }
   my @lines;
   my @bits;
   $oneline[-1] .= ','; # going into multiline mode, *now* we add the comma
@@ -338,7 +350,7 @@ sub _format_single {
   my ($first, @lines) = split /\n/, $raw;
   return join("\n", $l, $self->_indent($first), $r) unless @lines;
   (my $pad = $self->indent_by) =~ s/^ //;
-  my $last = $lines[-1] =~ /^[\}\]]/ ? (pop @lines).$pad: '';
+  my $last = $lines[-1] =~ /^[\}\]\)]/ ? (pop @lines).$pad: '';
   return join("\n",
     $l.($l eq '{' ? ' ' : $pad).$first,
     (map $self->_indent($_), @lines),
