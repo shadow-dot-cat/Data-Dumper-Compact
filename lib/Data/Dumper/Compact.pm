@@ -264,7 +264,7 @@ sub _format_arraylike {
       push @bits, $1;
     }
     # stuff whatever's left from the middle into the line array
-    push(@lines, $f);
+    push(@lines, $f) if length($f);
   }
   push @lines, join(' ', @bits) if @bits;
   return join("\n", $l, (map $self->_indent($_), @lines), $r);
