@@ -88,12 +88,8 @@ sub expand {
     ] ];
   } elsif (ref($data) eq 'ARRAY') {
     return [ array => [ map $self->expand($_), @$data ] ];
-  } elsif (
-    my $class = blessed($data)
-    and grep { $_ eq 'ARRAY' or $_ eq 'HASH' } reftype($data)
-  ) {
-    my $cursed = ref($data) eq 'ARRAY' ? [ @$data ] : { %$data };
-    return [ blessed => [ $self->expand($cursed), $class ] ];
+  } elsif (blessed($data) and my $ret = $self->_expand_blessed($data)) {
+    return $ret;
   }
   (my $thing = $self->_dumper($data)) =~ s/\n\Z//;
 
@@ -102,6 +98,13 @@ sub expand {
     return [ ($string =~ /^-[a-zA-Z]\w*$/ ? 'key' : 'string') => $string ];
   }
   return [ thing => $thing ];
+}
+
+sub _expand_blessed {
+  my ($self, $blessed) = @_;
+  return unless grep { $_ eq 'ARRAY' or $_ eq 'HASH' } reftype($blessed);
+  my $cursed = reftype($blessed) eq 'ARRAY' ? [ @$blessed ] : { %$blessed };
+  return [ blessed => [ $self->expand($cursed), blessed($blessed) ] ];
 }
 
 sub transform {
