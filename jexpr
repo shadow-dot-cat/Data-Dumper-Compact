@@ -1,0 +1,15 @@
+use strict;
+use warnings;
+use Path::Tiny;
+use JSON::Dumper::Compact 'ddc';
+use Mojo::JSON qw(true false);
+
+my $data = eval '+'.($ARGV[0] =~ /^[\{\[]/ ? $ARGV[0] : path($ARGV[0])->slurp);
+
+die "Invalid data: $@" unless $data;
+
+my $args = ($ARGV[1] ? eval '+'.$ARGV[1] : {});
+
+die "Invalid args: $@" unless $args;
+
+print ddc($data, $args);
