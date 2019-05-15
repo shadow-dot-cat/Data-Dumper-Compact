@@ -7,7 +7,7 @@ use Mu;
 use strictures 2;
 use namespace::clean;
 
-our $VERSION = '0.002002';
+our $VERSION = '0.002003';
 $VERSION =~ tr/_//d;
 
 sub import {
