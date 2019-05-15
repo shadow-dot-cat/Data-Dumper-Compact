@@ -289,18 +289,23 @@ sub _format_arraylike {
   return join("\n", $l, (map $self->_indent($_), @lines), $r);
 }
 
+sub _format_hashkey {
+  my ($self, $key) = @_;
+  ($key =~ /^-?[a-zA-Z_]\w*$/
+    ? $key
+    # stick a space on the front to force dumping of e.g. 123, then strip it
+    : do {
+       s/^" //, s/"\n\Z// for my $s = $self->_dumper(" $key");
+       $self->_format_string($s)
+    }
+  ).' =>';
+}
+
 sub _format_hash {
   my ($self, $payload) = @_;
   my ($keys, $hash) = @$payload;
   my %k = (map +(
-    $_ => ($_ =~ /^-?[a-zA-Z_]\w*$/
-      ? $_
-        # stick a space on the front to force dumping of e.g. 123, then strip it
-      : do {
-           s/^" //, s/"\n\Z// for my $s = $self->_dumper(" $_");
-           $self->_format_string($s)
-        }
-    ).' =>'), @$keys
+    $_ => $self->_format_hashkey($_)), @$keys
   );
   if ($self->{vertical}) {
     return join("\n", '{',
