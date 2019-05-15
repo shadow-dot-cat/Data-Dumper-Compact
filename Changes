@@ -1,5 +1,7 @@
 Revision history for Data-Dumper-Compact
 
+  - Render blessed hashrefs and arrayrefs using DDC logic
+
 0.002002 - 2019-05-10
   - Collapse single key/value in list/array correctly
 
