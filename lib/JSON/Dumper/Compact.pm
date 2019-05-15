@@ -13,8 +13,8 @@ sub _format_el { shift->_format(@_).',' }
 
 sub _format_hashkey { encode_json($_[1]).':' }
 
-sub _format_string { encode_json($_[1]) }
+sub _format_string { '"'.$_[1].'"' }
 
-sub _format_thing { encode_json($_[1]) }
+sub _format_thing { $_[1] }
 
 1;
