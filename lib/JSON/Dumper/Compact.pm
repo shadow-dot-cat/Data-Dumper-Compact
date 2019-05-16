@@ -1,17 +1,27 @@
 package JSON::Dumper::Compact;
 
-use Mojo::JSON qw(encode_json);
+use JSON::MaybeXS;
 use Mu;
+use curry;
 use strictures 2;
 use namespace::clean;
 
 extends 'Data::Dumper::Compact';
 
-sub _build_dumper { \&encode_json }
+lazy json_obj => sub {
+  JSON->new
+      ->allow_nonref(1)
+      ->relaxed(1)
+      ->filter_json_single_key_object(__bless__ => sub {
+          bless($_[0][1], $_[0][0]);
+        });
+}, handles => [ 'decode' ];
+
+sub _build_dumper { shift->json_obj->curry::encode }
 
 sub _format_el { shift->_format(@_).',' }
 
-sub _format_hashkey { encode_json($_[1]).':' }
+sub _format_hashkey { $_[0]->json_obj->encode($_[1]).':' }
 
 sub _format_string { '"'.$_[1].'"' }
 
@@ -32,5 +42,7 @@ sub _format_blessed {
     { '__bless__' => [ array => [ [ string => $class ], $content ] ] },
   ] ]);
 }
+
+sub encode { shift->dump(@_) }
 
 1;
