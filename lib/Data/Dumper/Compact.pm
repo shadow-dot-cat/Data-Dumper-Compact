@@ -12,7 +12,8 @@ $VERSION =~ tr/_//d;
 
 sub import {
   my ($class, $ddc, $opts) = @_;
-  return unless ($ddc||'') eq 'ddc';
+  return unless defined($ddc);
+  die "Don't know how to export '$ddc'" unless ($ddc||'') =~ /^[jd]dc$/;
   my $targ = caller;
   my $cb = $class->new($opts||{})->dump_cb;
   no strict 'refs';
