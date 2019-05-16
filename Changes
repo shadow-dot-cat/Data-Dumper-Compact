@@ -1,5 +1,6 @@
 Revision history for Data-Dumper-Compact
 
+0.003002 - 2019-05-16
   - Doc improvements for JSON::Dumper::Compact
 
 0.003001 - 2019-05-16
