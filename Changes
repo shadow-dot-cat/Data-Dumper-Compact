@@ -1,5 +1,7 @@
 Revision history for Data-Dumper-Compact
 
+  - Bugfix: actually export the right subroutine name
+
 0.003000 - 2019-05-16
   - JSON dumping and rehydrating support
 

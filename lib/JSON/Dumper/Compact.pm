@@ -104,7 +104,7 @@ DO NOT USE THIS METHOD ON UNTRUSTED DATA IT WAS NOT DESIGNED TO BE SECURE.
 =head1 COPYRIGHT
 
 Copyright (c) 2019 the L<Data::Dumper::Compact/AUTHOR> and
-L<Data::Dumper::Compact/CONTRIBUTORS>.
+L<Data::Dumper::Compact/CONTRIBUTORS> as listed in L<Data::Dumper::Compact>.
 
 =head1 LICENSE
 

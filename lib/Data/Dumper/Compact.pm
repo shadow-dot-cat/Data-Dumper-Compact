@@ -17,7 +17,7 @@ sub import {
   my $targ = caller;
   my $cb = $class->new($opts||{})->dump_cb;
   no strict 'refs';
-  *{"${targ}::ddc"} = $cb;
+  *{"${targ}::${ddc}"} = $cb;
 }
 
 ro max_width => default => 78;
