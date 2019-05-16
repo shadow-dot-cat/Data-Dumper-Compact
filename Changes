@@ -1,5 +1,7 @@
 Revision history for Data-Dumper-Compact
 
+  - Doc improvements for JSON::Dumper::Compact
+
 0.003001 - 2019-05-16
   - Bugfix: actually export the right subroutine name
 
