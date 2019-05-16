@@ -62,8 +62,8 @@ lazy dumper => sub {
 
 sub _dumper { $_[0]->dumper->($_[1]) }
 
-sub dump {
-  my ($self, $data, $opts) = @_;
+sub _optify {
+  my ($self, $opts, $method, @args) = @_;
   # if we're an object, localize anything provided in the options,
   # and also blow away the dependent attributes if indent_by is changed
   ref($self) and $opts
@@ -71,7 +71,15 @@ sub dump {
     and $opts->{indent_by}
     and delete @{$self}{grep !$opts->{$_}, qw(indent_width dumper)};
   ref($self) or $self = $self->new($opts||{});
-  $self->format($self->transform($self->transforms, $self->expand($data)));
+  $self->$method(@args);
+}
+
+sub dump {
+  my ($self, $data, $opts) = @_;
+  $self->_optify($opts, sub {
+    my ($self) = @_;
+    $self->format($self->transform($self->transforms, $self->expand($data)));
+  });
 }
 
 sub dump_cb {

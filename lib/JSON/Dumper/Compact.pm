@@ -2,7 +2,6 @@ package JSON::Dumper::Compact;
 
 use JSON::MaybeXS;
 use Mu;
-use curry;
 use strictures 2;
 use namespace::clean;
 
@@ -15,9 +14,9 @@ lazy json_obj => sub {
       ->filter_json_single_key_object(__bless__ => sub {
           bless($_[0][1], $_[0][0]);
         });
-}, handles => [ 'decode' ];
+}, handles => { _json_decode => 'decode' };
 
-sub _build_dumper { shift->json_obj->curry::encode }
+sub _build_dumper { my $j = shift->json_obj; sub { $j->encode($_[0]) } }
 
 sub _format_el { shift->_format(@_).',' }
 
@@ -44,5 +43,10 @@ sub _format_blessed {
 }
 
 sub encode { shift->dump(@_) }
+
+sub decode {
+  my ($self, $data, $opts) = @_;
+  $self->_optify($opts, _json_decode => $data);
+}
 
 1;
