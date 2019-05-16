@@ -1,5 +1,6 @@
 Revision history for Data-Dumper-Compact
 
+0.003000 - 2019-05-16
   - JSON dumping and rehydrating support
 
 0.002003 - 2019-05-15
