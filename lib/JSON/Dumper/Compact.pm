@@ -70,7 +70,7 @@ Blessed references without a C<TO_JSON> method are rendered as:
 
   { "__bless__": [
     "The::Class",
-    { "the": "object },
+    { "the": "object" },
   ] }
 
 =head1 METHODS
