@@ -95,9 +95,14 @@ set to be able to reliably reparse what we can currently format - notably
 setting C<relaxed> to allow for trailing commas and using
 C<filter_json_single_key_object> to re-inflate blessed objects.
 
-Note that using this method on untrusted data is a security risk. Don't use
+Note that using this method on untrusted data is a security risk. While
+C<encode>/C<dump> should be usable for JSON formatting, in general,
+C<decode> fully rehydrates for debugging purposes and as such can e.g.
+cause DESTROY methods to be called unexpectedly, which can allow a
+malicious user to do things to your perl5 VM. Rather than using
 debugging specific code on untrusted data, use L<JSON::MaybeXS> or
-L<Mojo::JSON> directly.
+L<Mojo::JSON> directly (if the C<encode> output doesn't parse correctly
+via other libraries, please report that as a bug)..
 
 DO NOT USE THIS METHOD ON UNTRUSTED DATA IT WAS NOT DESIGNED TO BE SECURE.
 
