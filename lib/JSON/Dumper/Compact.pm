@@ -66,7 +66,20 @@ JSON::Dumper::Compact - JSON processing with L<Data::Dumper::Compact> aesthetics
 JSON::Dumper::Compact is a subclass of L<Data::Dumper::Compact> that turns
 arrayrefs and hashrefs intead into JSON.
 
-Blessed references without a C<TO_JSON> method are rendered as:
+Deep data structures are rendered highly compactly:
+
+  [
+    "1556933590.65383", "Fri May  3 18:33:10 2019", 26794, "INFO", 3,
+    [ "SRV:8FB66F32" ], [ [
+        "/opt/voice-srvc-native/bin/async-srvc-att-gateway-poller", 33,
+        "NERV::Voice::SRV::Native::AsyncSRVATTGatewayPoller::main",
+    ] ],
+    "batch_nena_messages returned", "OK", 6, { "FILENAME": "lqxw020323" },
+    1556933584, "lqxw020323",
+  ]
+
+To ease debugging, blessed references without a C<TO_JSON> method are
+rendered as an object with a single two-element arrayref value:
 
   { "__bless__": [
     "The::Class",
