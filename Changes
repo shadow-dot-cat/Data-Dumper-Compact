@@ -1,5 +1,7 @@
 Revision history for Data-Dumper-Compact
 
+  - Don't barf on empty array/hash refs
+
 0.003002 - 2019-05-16
   - Doc improvements for JSON::Dumper::Compact
 
