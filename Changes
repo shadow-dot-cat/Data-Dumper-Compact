@@ -1,5 +1,6 @@
 Revision history for Data-Dumper-Compact
 
+  - Add versions to everything so people can depend on them
   - Don't barf on empty array/hash refs
 
 0.003002 - 2019-05-16

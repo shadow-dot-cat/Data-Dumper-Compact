@@ -2,8 +2,10 @@ package Devel::DDCWarn;
 
 use strictures 2;
 use Data::Dumper::Compact;
-
 use base qw(Exporter);
+
+our $VERSION = '0.003002';
+$VERSION =~ tr/_//d;
 
 our @EXPORT = map +($_, $_.'T'), qw(Df Dto Dwarn Derr);
 
