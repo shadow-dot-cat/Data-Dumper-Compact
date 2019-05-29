@@ -4,7 +4,7 @@ use strictures 2;
 use Data::Dumper::Compact;
 use base qw(Exporter);
 
-our $VERSION = '0.003002';
+our $VERSION = '0.003003';
 $VERSION =~ tr/_//d;
 
 our @EXPORT = map +($_, $_.'T'), qw(Df Dto Dwarn Derr);
