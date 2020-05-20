@@ -3,7 +3,7 @@ package JSON::Dumper::Compact;
 use JSON::MaybeXS;
 use Mu::Tiny;
 
-our $VERSION = '0.004001';
+our $VERSION = '0.005000';
 $VERSION =~ tr/_//d;
 
 extends 'Data::Dumper::Compact';
