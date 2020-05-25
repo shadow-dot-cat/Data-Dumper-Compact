@@ -3,7 +3,7 @@ package Data::Dumper::Compact;
 use List::Util qw(sum);
 use Scalar::Util qw(blessed reftype);
 use Data::Dumper ();
-use Mu; #::Tiny;
+use Mu::Tiny;
 
 our $VERSION = '0.005000';
 $VERSION =~ tr/_//d;
