@@ -58,11 +58,21 @@ my $W = sub { warn $_[0] };
 
 sub Dwarn { Dto($W, @_) }
 sub DwarnT { DtoT($W, @_) }
+sub Dwarn1 {
+  return () unless @_;
+  my $one = shift;
+  wantarray ? (Dwarn($one), @_) : Dwarn($one)
+}
 
 my $E = sub { print STDERR $_[0] };
 
 sub Derr { Dto($E, @_) }
 sub DerrT { DtoT($E, @_) }
+sub Derr1 {
+  return () unless @_;
+  my $one = shift;
+  wantarray ? (Derr($one), @_) : Derr($one)
+}
 
 1;
 

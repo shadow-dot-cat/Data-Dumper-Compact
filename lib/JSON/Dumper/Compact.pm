@@ -2,6 +2,7 @@ package JSON::Dumper::Compact;
 
 use JSON::MaybeXS;
 use Mu::Tiny;
+use Class::Method::Modifiers;
 
 our $VERSION = '0.005001';
 $VERSION =~ tr/_//d;

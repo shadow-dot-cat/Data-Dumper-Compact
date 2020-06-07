@@ -1,5 +1,7 @@
 Revision history for Data-Dumper-Compact
 
+  - Fix JSON::Dumper::Compact
+
 0.005001 - 2020-05-25
   - Fixup to use Mu::Tiny everywhere and require working version of Mu::Tiny
 
