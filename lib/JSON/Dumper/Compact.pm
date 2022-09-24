@@ -46,6 +46,16 @@ sub _format_blessed {
   ] ]);
 }
 
+sub _format_ref {
+  my ($self, $payload) = @_;
+  my %subst = ('/' => '~1', '~' => '~0');
+  my @path = map { (my $x = $_->[1]) =~ s{[/~]}{$subst{$_}}eg; $x } @$payload;
+  return $self->format([ hash => [
+    [ '$ref' ],
+    { '$ref' => [ string => join('/', '#', @path) ] },
+  ] ]);
+}
+
 sub encode { shift->dump(@_) }
 
 sub decode {
