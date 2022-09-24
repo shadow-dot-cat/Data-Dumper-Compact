@@ -4,7 +4,7 @@ use JSON::MaybeXS;
 use Mu::Tiny;
 use Class::Method::Modifiers;
 
-our $VERSION = '0.005002';
+our $VERSION = '0.006000';
 $VERSION =~ tr/_//d;
 
 extends 'Data::Dumper::Compact';
