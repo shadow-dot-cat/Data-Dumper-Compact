@@ -575,7 +575,7 @@ attempt to format that too:
 =head2 All together now
 
 The full set of behaviours allows compact (and, we hope, readable) versions
-of complex data structures. To provide one of the examples that expired this
+of complex data structures. To provide one of the examples that inspired this
 module - here is the formatting under standard options for a moderately
 complex L<SQL::Abstract> update statement:
 
